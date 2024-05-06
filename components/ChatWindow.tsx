@@ -1,6 +1,6 @@
 // components/ChatWindow.tsx
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import GroqService from "../services/GroqService";
 import StorageService from "../services/StorageService";
 import MessageBox from "../components/MessageBox";
@@ -46,6 +46,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
                     const session = await sessionManager.getSession(sessionId);
                     if (session) {
                         setMessages(session.messages);
+                        setHasAnswered(true);
                     }
                 } else {
                     const model =

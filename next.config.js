@@ -3,10 +3,6 @@ const { IgnorePlugin } = require("webpack");
 
 const nextConfig = {
     reactStrictMode: true,
-    experimental: {
-        esmExternals: "loose", // <-- add this
-        serverComponentsExternalPackages: ["mongoose"], // <-- and this
-    },
     webpack: (config) => {
         config.plugins.push(
             new IgnorePlugin({
