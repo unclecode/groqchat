@@ -4,7 +4,9 @@ class StorageService {
     private static readonly SYSTEM_PROMPT_KEY = "groqchat-systemPrompt";
     private static readonly GROQ_API_TOKEN_KEY = "groqchat-groqAPIToken";
     private static readonly MONGODB_CONNECTION_STRING_KEY = "groqchat-mongoDBConnectionString";
+    private static readonly DATABASE_TYPE = "indexedDB";
     private static readonly DEFAULT_MODEL_KEY = "groqchat-defaultModel";
+    private static readonly MODEL_KEY = "groqchat-currentSessionModel";
     private static readonly CURRENT_SESSION_MODEL_KEY = "groqchat-currentSessionModel";
 
     static getMode(): string | null {
@@ -13,6 +15,14 @@ class StorageService {
 
     static saveMode(mode: string): void {
         localStorage.setItem(StorageService.MODE_KEY, mode);
+    }
+
+    static getModel(): string | null {
+        return localStorage.getItem(StorageService.MODEL_KEY);
+    }
+
+    static saveModel(model: string): void {
+        localStorage.setItem(StorageService.MODEL_KEY, model);
     }
 
     static getDefaultModel(): string | null {
@@ -53,6 +63,14 @@ class StorageService {
 
     static saveMongoDBConnectionString(mongoDBConnectionString: string): void {
         localStorage.setItem(StorageService.MONGODB_CONNECTION_STRING_KEY, mongoDBConnectionString);
+    }
+
+    static getDatabaseType(): string {
+        return StorageService.DATABASE_TYPE;
+    }
+
+    static clear(): void {
+        localStorage.clear();
     }
 }
 

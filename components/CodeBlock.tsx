@@ -26,7 +26,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ className, children }) => {
     // If language is empty, default to plaintext
     language = language || "plaintext";
 
-    // debugger
+    // 
     const codeContent = renderToString(children); // Ensure you handle children as React nodes properly
 
     const handleCopy = () => {
