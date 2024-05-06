@@ -69,6 +69,10 @@ class StorageService {
         return StorageService.DATABASE_TYPE;
     }
 
+    static saveDatabaseType(databaseType: string): void {
+        localStorage.setItem(StorageService.DATABASE_TYPE, databaseType);
+    }
+
     static clear(): void {
         localStorage.clear();
     }

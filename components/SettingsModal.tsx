@@ -7,6 +7,7 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const [selectedModel, setSelectedModel] = useState(StorageService.getModel() || "llama3-8b-8192");
     const [systemPrompt, setSystemPrompt] = useState(StorageService.getSystemPrompt() || "");
     const [groqAPIToken, setGroqAPIToken] = useState(StorageService.getGroqAPIToken() || "");
+    const [databaseType, setDatabaseType] = useState(StorageService.getDatabaseType() || "indexedDB");
     const [mongoDBConnectionString, setMongoDBConnectionString] = useState(
         StorageService.getMongoDBConnectionString() || ""
     );
@@ -18,6 +19,7 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         setSystemPrompt(StorageService.getSystemPrompt() || "");
         setGroqAPIToken(StorageService.getGroqAPIToken() || "");
         setMongoDBConnectionString(StorageService.getMongoDBConnectionString() || "");
+        setDatabaseType(StorageService.getDatabaseType() || "indexedDB");
     }, []);
 
     const handleModelChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -29,7 +31,9 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         StorageService.saveSystemPrompt(systemPrompt);
         StorageService.saveGroqAPIToken(groqAPIToken);
         StorageService.saveMongoDBConnectionString(mongoDBConnectionString);
-        StorageService.saveModel(selectedModel); // Save the selected model
+        StorageService.saveModel(selectedModel);
+        StorageService.saveDatabaseType(databaseType);
+
         onClose();
     };
 
@@ -48,6 +52,11 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const handleMongoDBConnectionStringChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setMongoDBConnectionString(event.target.value);
     };
+
+    const handleDatabaseTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setDatabaseType(event.target.value);
+    }
+
 
     return (
         <div
@@ -76,6 +85,14 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                     onClick={() => setSelectedSetting("general")}
                                 >
                                     General
+                                </li>
+                                <li
+                                    className={`text-zinc-300 cursor-pointer ${
+                                        selectedSetting === "database" ? "bg-zinc-600" : ""
+                                    }`}
+                                    onClick={() => setSelectedSetting("database")}
+                                >
+                                    Database
                                 </li>
                                 <li
                                     className={`text-zinc-300 cursor-pointer ${
@@ -133,6 +150,27 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                     </div>
                                 </>
                             )}
+                            {selectedSetting === "database" && (
+                                // Check for database source type, IndexedDB, LocalStorage or MongoDB
+                                <>
+                                    <div className="mb-4">
+                                        <label htmlFor="databaseSourceType" className="block text-zinc-300">
+                                            Database Source Type
+                                        </label>
+                                        <select
+                                            id="databaseSourceType"
+                                            className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full border border-zinc-700"
+                                        >
+                                            <option value="indexeddb">IndexedDB</option>
+                                            <option disabled value="localstorage">LocalStorage</option>
+                                            <option disabled value="mongodb">MongoDB</option>
+                                        </select>
+                                    </div>
+                                </>
+                            )}
+
+
+
                             {selectedSetting === "credentials" && (
                                 <>
                                     <div className="mb-4">
@@ -141,17 +179,18 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                         </label>
                                         <input
                                             id="groqAPIToken"
-                                            type="text"
+                                            type="password"
                                             value={groqAPIToken}
                                             onChange={handleGroqAPITokenChange}
                                             className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full border border-zinc-700"
                                         />
                                     </div>
-                                    <div className="mb-4">
-                                        <label htmlFor="mongoDBConnectionString" className="block text-zinc-300">
+                                    <div className="mb-4 disabled" disabled>
+                                        <label disabled htmlFor="mongoDBConnectionString" className="block text-zinc-300">
                                             MongoDB Connection String
                                         </label>
                                         <input
+                                            disabled
                                             id="mongoDBConnectionString"
                                             type="text"
                                             value={mongoDBConnectionString}

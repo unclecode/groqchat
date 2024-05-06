@@ -5,7 +5,7 @@ import GroqService from "../services/GroqService";
 import StorageService from "../services/StorageService";
 import MessageBox from "../components/MessageBox";
 import InputForm from "../components/InputForm";
-import { SessionManager } from "../services/SessionManager";
+import SessionManager from "../services/SessionManager";
 
 interface ChatWindowProps {
     sessionId?: string;
@@ -49,11 +49,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
                         setHasAnswered(true);
                     }
                 } else {
-                    const model =
-                        StorageService.getCurrentSessionModel() || StorageService.getDefaultModel() || "llama3-8b-8192";
-                    const newSessionId = await sessionManager.createSession(model);
                     setMessages([]);
-                    router.push(`/c/${newSessionId}`);
                 }
             }
         };
@@ -61,11 +57,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
         initSession();
     }, [sessionManager, isStorageReady, sessionId]);
 
-    const handleUserInput = (e) => {
+    const handleUserInput = async (e) => {
         e?.preventDefault(); // Prevent form submit if called from form event
         setHasAnswered(true);
 
-        if (userInput.trim() && sessionManager && sessionId && isStorageReady) {
+        if (userInput.trim() && sessionManager && isStorageReady) {
+
+            // if sessionId is null means that the session is not created yet so we need to create it
+            if (!sessionId) {
+
+                const model =
+                StorageService.getCurrentSessionModel() || StorageService.getDefaultModel() || "llama3-8b-8192";
+                const newSessionId = await sessionManager.createSession(model);
+                setMessages([]);
+                router.replace(`/c/${newSessionId}`);
+                sessionId = newSessionId;
+
+            }
+
             sessionManager
                 .updateSession(sessionId, { role: "user", content: userInput })
                 .then(() => {
@@ -94,6 +103,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
                 // From all messages keep role, and content
                 let cleanMessages = messages.map(({ role, content }) => ({ role, content }));
                 const assistantResponse = await groqService.getChatCompletion(model, systemPrompt, cleanMessages);
+
                 sessionManager
                     .updateSession(sessionId, { role: "assistant", content: assistantResponse })
                     .then(() => {

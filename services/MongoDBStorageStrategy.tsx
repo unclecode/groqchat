@@ -38,6 +38,11 @@ export class MongoDBStorageStrategy extends StorageStrategy {
             await this.connect();
         }
         try {
+            // Check is this the first assistant message
+            if (session.messages.length === 2 && session.messages[1].role === "assistant") {
+                session.caption = session.messages[1].content;
+            }
+
             const chatSessionModel = mongoose.model<ChatSessionModel>("ChatSession", ChatSessionSchema);
             const chatSession = new chatSessionModel(session);
             await chatSession.save();
@@ -61,4 +66,47 @@ export class MongoDBStorageStrategy extends StorageStrategy {
             return null;
         }
     }
+
+    async getAllSessions(): Promise<ChatSession[]> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            const chatSessionModel = this.connection.model<ChatSession>("ChatSession", ChatSessionSchema);
+            const sessions = await chatSessionModel.find();
+            console.log("Sessions retrieved successfully");
+            return sessions;
+        } catch (error) {
+            console.error("Error retrieving sessions:", error);
+            return [];
+        }
+    }
+
+    async deleteSession(sessionId: string): Promise<void> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            const chatSessionModel = this.connection.model<ChatSession>("ChatSession", ChatSessionSchema);
+            await chatSessionModel.findByIdAndDelete(sessionId);
+            console.log("Session deleted successfully");
+        } catch (error) {
+            console.error("Error deleting session:", error);
+        }
+    }
+
+
+    async renameSession(sessionId: string, newCaption: string): Promise<void> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            const chatSessionModel = this.connection.model<ChatSession>("ChatSession", ChatSessionSchema);
+            await chatSessionModel.findByIdAndUpdate(sessionId, { caption: newCaption });
+            console.log("Session renamed successfully");
+        } catch (error) {
+            console.error("Error renaming session:", error);
+        }
+    }
+    
 }

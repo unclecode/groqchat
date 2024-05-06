@@ -6,7 +6,7 @@ import { LocalStorageStrategy } from "./LocalStorageStrategy";
 import { IndexedDBStorageStrategy } from "./IndexedDBStorageStrategy";
 import StorageService from "./StorageService";
 
-export class SessionManager {
+export default class SessionManager {
     private storageStrategy: StorageStrategy;
 
     constructor() {
@@ -34,7 +34,9 @@ export class SessionManager {
         const session: ChatSession = {
             _id: sessionId,
             model,
+            caption: "New session",
             messages: [],
+            createdAt: new Date(),
         };
         await this.storageStrategy.saveSession(session);
         return sessionId;
@@ -52,5 +54,20 @@ export class SessionManager {
             session.messages.push({ ...message, createdAt: new Date() });
             await this.storageStrategy.saveSession(session);
         }
+    }
+
+    async getAllSessions(): Promise<ChatSession[]> {
+        await this.waitForStorageReady();
+        return this.storageStrategy.getAllSessions();
+    }
+
+    async deleteSession(sessionId: string): Promise<void> {
+        await this.waitForStorageReady();
+        await this.storageStrategy.deleteSession(sessionId);
+    }
+
+    async renameSession(sessionId: string, newCaption: string): Promise<void> {
+        await this.waitForStorageReady();
+        await this.storageStrategy.renameSession(sessionId, newCaption);
     }
 }

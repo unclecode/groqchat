@@ -45,6 +45,11 @@ export class IndexedDBStorageStrategy extends StorageStrategy {
             throw new Error("IndexedDB is not available");
         }
 
+        // Check is this the first assistant message
+        if (session.messages.length === 2 && session.messages[1].role === "assistant") {
+            session.caption = session.messages[1].content.substring(0, 20);
+        }
+
         const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
         const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
         const putRequest = store.put(session);
@@ -78,6 +83,91 @@ export class IndexedDBStorageStrategy extends StorageStrategy {
                 // print the session to the console
                 console.log(session);
                 resolve(session || null);
+            };
+
+            getRequest.onerror = (event) => {
+                console.error("Error retrieving session:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async getAllSessions(): Promise<ChatSession[]> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readonly");
+        const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+        const getRequest = store.getAll();
+
+        return new Promise<ChatSession[]>((resolve, reject) => {
+            getRequest.onsuccess = (event) => {
+                const sessions = (event.target as IDBRequest<ChatSession[]>).result;
+                console.log("Sessions retrieved successfully");
+                // print the sessions to the console
+                console.log(sessions);
+                resolve(sessions);
+            };
+
+            getRequest.onerror = (event) => {
+                console.error("Error retrieving sessions:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async deleteSession(sessionId: string): Promise<void> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
+        const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+        const deleteRequest = store.delete(sessionId);
+
+        return new Promise<void>((resolve, reject) => {
+            deleteRequest.onsuccess = () => {
+                console.log("Session deleted successfully");
+                resolve();
+            };
+
+            deleteRequest.onerror = (event) => {
+                console.error("Error deleting session:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async renameSession(sessionId: string, newCaption: string): Promise<void> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
+        const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+        const getRequest = store.get(sessionId);
+
+        return new Promise<void>((resolve, reject) => {
+            getRequest.onsuccess = (event) => {
+                const session = (event.target as IDBRequest<ChatSession>).result;
+                if (session) {
+                    session.caption = newCaption;
+                    const putRequest = store.put(session);
+
+                    putRequest.onsuccess = () => {
+                        console.log("Session renamed successfully");
+                        resolve();
+                    };
+
+                    putRequest.onerror = (event) => {
+                        console.error("Error renaming session:", event);
+                        reject(event);
+                    };
+                } else {
+                    console.error("Session not found");
+                    reject(new Error("Session not found"));
+                }
             };
 
             getRequest.onerror = (event) => {
