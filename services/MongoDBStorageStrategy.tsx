@@ -33,6 +33,18 @@ export class MongoDBStorageStrategy extends StorageStrategy {
         }
     }
 
+    async flushDB(): Promise<void> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            await mongoose.connection.db.dropDatabase();
+            console.log("Database flushed successfully");
+        } catch (error) {
+            console.error("Error flushing database:", error);
+        }
+    }
+
     async saveSession(session: ChatSession): Promise<void> {
         if (!this.isConnected) {
             await this.connect();
@@ -106,6 +118,135 @@ export class MongoDBStorageStrategy extends StorageStrategy {
             console.log("Session renamed successfully");
         } catch (error) {
             console.error("Error renaming session:", error);
+        }
+    }
+
+    async createThreadFromPosition(sessionId: string, position: number, editedContent: string): Promise<void> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            const chatSessionModel = this.connection.model<ChatSession>("ChatSession", ChatSessionSchema);
+            const session = await chatSessionModel.findById(sessionId);
+            if (session) {
+                session.messages[position].content = editedContent;
+                await session.save();
+                console.log("Thread created successfully");
+            }
+        } catch (error) {
+            console.error("Error creating thread:", error);
+        }
+    }
+
+    async createAttachment(
+        sessionId: string,
+        messageIndex: number,
+        source: string,
+        content: string
+    ): Promise<void> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            const chatSessionModel = this.connection.model<ChatSession>("ChatSession", ChatSessionSchema);
+            const session = await chatSessionModel.findById(sessionId);
+            if (session) {
+                session.attachments.push({
+                    sessionId: session._id,
+                    messageIndex,
+                    createdAt: new Date(),
+                    source,
+                    content,
+                    active: true,
+                });
+                await session.save();
+                console.log("Attachment created successfully");
+            }
+        } catch (error) {
+            console.error("Error creating attachment:", error);
+        }
+    }
+
+    async getAttachments(sessionId: string): Promise<any[]> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            const chatSessionModel = this.connection.model<ChatSession>("ChatSession", ChatSessionSchema);
+            const session = await chatSessionModel.findById(sessionId);
+            console.log("Attachments retrieved successfully");
+            return session?.attachments || [];
+        } catch (error) {
+            console.error("Error retrieving attachments:", error);
+            return [];
+        }
+    }
+
+    async deleteAttachment(sessionId: string, attachmentId: number): Promise<void> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            const chatSessionModel = this.connection.model<ChatSession>("ChatSession", ChatSessionSchema);
+            const session = await chatSessionModel.findById(sessionId);
+            if (session) {
+                session.attachments.splice(attachmentId, 1);
+                await session.save();
+                console.log("Attachment deleted successfully");
+            }
+        } catch (error) {
+            console.error("Error deleting attachment:", error);
+        }
+    }
+
+    async updateAttachment(sessionId: string, attachmentId: number, active: boolean): Promise<void> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            const chatSessionModel = this.connection.model<ChatSession>("ChatSession", ChatSessionSchema);
+            const session = await chatSessionModel.findById(sessionId);
+            if (session) {
+                session.attachments[attachmentId].active = active;
+                await session.save();
+                console.log("Attachment updated successfully");
+            }
+        } catch (error) {
+            console.error("Error updating attachment:", error);
+        }
+    }
+
+    async likeMessage(sessionId: string, messageIndex: number): Promise<void> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            const chatSessionModel = this.connection.model<ChatSession>("ChatSession", ChatSessionSchema);
+            const session = await chatSessionModel.findById(sessionId);
+            if (session) {
+                session.messages[messageIndex].liked = true;
+                await session.save();
+                console.log("Message liked successfully");
+            }
+        } catch (error) {
+            console.error("Error liking message:", error);
+        }
+    }
+
+    async clearAllMessages(sessionId: string): Promise<void> {
+        if (!this.isConnected) {
+            await this.connect();
+        }
+        try {
+            const chatSessionModel = this.connection.model<ChatSession>("ChatSession", ChatSessionSchema);
+            const session = await chatSessionModel.findById(sessionId);
+            if (session) {
+                session.messages = [];
+                await session.save();
+                console.log("Messages cleared successfully");
+            }
+        } catch (error) {
+            console.error("Error clearing messages:", error);
         }
     }
     

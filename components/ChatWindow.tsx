@@ -2,10 +2,25 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import GroqService from "../services/GroqService";
+import Crawl4AIService from "../services/Crawl4AIService";
 import StorageService from "../services/StorageService";
 import MessageBox from "../components/MessageBox";
 import InputForm from "../components/InputForm";
 import SessionManager from "../services/SessionManager";
+import Attachment from "../components/Attachment";
+import { ChevronLeftIcon, ChevronRightIcon, TrashIcon } from "@heroicons/react/24/outline";
+import IdeasPanel from "../components/IdeasPanel";
+import { useParams } from 'next/navigation'
+
+const extractUrls = (text: string): string[] => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.match(urlRegex) || [];
+};
+
+const removeUrls = (text: string): string => {
+    const urlRegex = /@(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, "").trim();
+};
 
 interface ChatWindowProps {
     sessionId?: string;
@@ -14,12 +29,15 @@ interface ChatWindowProps {
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) => {
     const router = useRouter();
+    const params = useParams<{ sessionId: string }>();
     const [messages, setMessages] = useState<
         { role: "user" | "assistant"; content: string; createdAt: Date; liked?: boolean }[]
     >([]);
     const [userInput, setUserInput] = useState("");
     const [sessionManager, setSessionManager] = useState<SessionManager | null>(null);
     const [isStorageReady, setIsStorageReady] = useState(false);
+    const [attachments, setAttachments] = useState<any[]>([]);
+    const [showAttachments, setShowAttachments] = useState(false);
 
     useEffect(() => {
         const initSessionManager = async () => {
@@ -31,7 +49,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
                     setIsStorageReady(true);
                 } catch (error) {
                     console.error("Error initializing SessionManager:", error);
-                    // Handle the error appropriately
                 }
             }
         };
@@ -57,77 +74,178 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
         initSession();
     }, [sessionManager, isStorageReady, sessionId]);
 
+    useEffect(() => {
+        const fetchAttachments = async () => {
+            if (sessionManager && isStorageReady && sessionId) {
+                const attachmentsData = await sessionManager.getAttachments(sessionId);
+                setAttachments(attachmentsData);
+                setShowAttachments(attachmentsData?.length > 0);
+            }
+        };
+
+        fetchAttachments();
+    }, [sessionManager, isStorageReady, sessionId]);
+
     const handleUserInput = async (e) => {
-        e?.preventDefault(); // Prevent form submit if called from form event
+        e?.preventDefault();
         setHasAnswered(true);
 
         if (userInput.trim() && sessionManager && isStorageReady) {
-
-            // if sessionId is null means that the session is not created yet so we need to create it
             if (!sessionId) {
-
                 const model =
-                StorageService.getCurrentSessionModel() || StorageService.getDefaultModel() || "llama3-8b-8192";
+                    StorageService.getCurrentSessionModel() || StorageService.getDefaultModel() || "llama3-8b-8192";
                 const newSessionId = await sessionManager.createSession(model);
                 setMessages([]);
                 router.replace(`/c/${newSessionId}`);
                 sessionId = newSessionId;
-
             }
 
-            sessionManager
-                .updateSession(sessionId, { role: "user", content: userInput })
-                .then(() => {
-                    setMessages((prevMessages) => [
-                        ...prevMessages,
-                        { role: "user", content: userInput, createdAt: new Date() },
-                    ]);
-                    setUserInput("");
+            const urls = extractUrls(userInput);
+            const inputWithoutUrls = removeUrls(userInput);
 
-                    console.log(messages);
-                })
-                .catch((error) => {
-                    console.error("Error updating session:", error);
-                    // Handle the error appropriately
-                });
+            await sessionManager.updateSession(sessionId, { role: "user", content: inputWithoutUrls });
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { role: "user", content: inputWithoutUrls, createdAt: new Date() },
+            ]);
+            setUserInput("");
+
+            const urlsToFetch = urls.filter((url) => !attachments.find((attachment) => attachment.source === url));
+            if (urlsToFetch.length > 0) {
+                const crawl4AIService = new Crawl4AIService();
+                const results = await crawl4AIService.fetch(urlsToFetch);
+
+                const newAttachments = [];
+                for (const [index, result] of results.entries()) {
+                    const attachment = {
+                        sessionId,
+                        messageIndex: messages.length,
+                        source: urlsToFetch[index],
+                        content: result.markdown,
+                        active: true,
+                    };
+                    newAttachments.push(attachment);
+                    await sessionManager.createAttachment(sessionId, messages.length, urls[index], result.markdown);
+                }
+
+                setAttachments((prevAttachments) => [...prevAttachments, ...newAttachments]);
+                setShowAttachments(true);
+            }
         }
     };
 
-    // Effect to call GroqService whenever messages change
-    useEffect(() => {
-        const handleAssistantResponse = async () => {
-            if (messages.length > 0 && messages[messages.length - 1].role === "user") {
-                const model = StorageService.getCurrentSessionModel() || "llama3-8b-8192";
-                const systemPrompt = StorageService.getSystemPrompt() || "";
-                const groqService = new GroqService();
-                // From all messages keep role, and content
-                let cleanMessages = messages.map(({ role, content }) => ({ role, content }));
-                const assistantResponse = await groqService.getChatCompletion(model, systemPrompt, cleanMessages);
+    const handleAssistantResponse = async () => {
+        if (messages.length > 0 && messages[messages.length - 1].role === "user") {
+            console.log(messages);
+            const model = StorageService.getCurrentSessionModel() || "llama3-8b-8192";
+            const systemPrompt = StorageService.getSystemPrompt() || "";
+            const groqService = new GroqService();
+            let cleanMessages = messages.map(({ role, content }) => ({ role, content }));
 
-                sessionManager
-                    .updateSession(sessionId, { role: "assistant", content: assistantResponse })
-                    .then(() => {
-                        console.log("Session updated successfully");
-                    })
-                    .catch((error) => {
-                        console.error("Error updating session:", error);
-                        // Handle the error appropriately
-                    });
+            const activeAttachments = attachments?.filter((attachment) => attachment.active);
+            const context = activeAttachments?.map((attachment) => attachment.content).join("\n\n");
 
-                setMessages((prevMessages) => [
-                    ...prevMessages,
-                    { role: "assistant", content: assistantResponse, createdAt: new Date() },
-                ]);
+            setMessages((prevMessages) => [...prevMessages, { role: "assistant", content: "", createdAt: new Date() }]);
+
+            const chatCompletion = await groqService.getChatCompletion(
+                model,
+                systemPrompt,
+                cleanMessages,
+                true,
+                context
+            );
+
+            let assistantResponse = "";
+
+            for await (const chunk of chatCompletion) {
+                const token = chunk.choices[0]?.delta?.content || "";
+                assistantResponse += token;
+
+                setMessages((prevMessages) => {
+                    const updatedMessages = [...prevMessages];
+                    updatedMessages[updatedMessages.length - 1].content = assistantResponse;
+                    return updatedMessages;
+                });
             }
-        };
 
+            await sessionManager.updateSession(sessionId, { role: "assistant", content: assistantResponse });
+        }
+    };
+
+    useEffect(() => {
         handleAssistantResponse();
-    }, [messages]); // Dependency array includes messages
+    }, [messages]);
+
+    const handleEditMessage = async (messageIndex: number, editedContent: string) => {
+        if (sessionManager && isStorageReady) {
+            await sessionManager.createThreadFromPosition(sessionId, messageIndex, editedContent);
+            const session = await sessionManager.getSession(sessionId);
+            if (session) {
+                setMessages(session.messages);
+            }
+        }
+    };
+
+    const handleToggleAttachmentActive = async (attachmentIndex: number) => {
+        const updatedAttachments = [...attachments];
+        updatedAttachments[attachmentIndex].active = !updatedAttachments[attachmentIndex].active;
+        setAttachments(updatedAttachments);
+
+        await sessionManager.updateAttachment(sessionId, attachmentIndex, updatedAttachments[attachmentIndex].active);
+    };
+
+    const handleDeleteAttachment = async (attachmentIndex: number) => {
+        const updatedAttachments = [...attachments];
+        updatedAttachments.splice(attachmentIndex, 1);
+        setAttachments(updatedAttachments);
+
+        // if no attachments left, hide the attachments panel
+        setShowAttachments(updatedAttachments.length > 0);
+
+        await sessionManager.deleteAttachment(sessionId, attachmentIndex);
+    };
 
     return (
-        <div className="flex flex-col text-zinc-300 h-screen">
-            <MessageBox messages={messages} setHasAnswered={setHasAnswered} />
-            <InputForm userInput={userInput} setUserInput={setUserInput} handleUserInput={handleUserInput} />
+        <div className="flex text-zinc-300 h-screen overflow-hidden">
+            <div className={`flex flex-col flex-1 transition-transform duration-300 ease-in-out transform `}
+                style = {{ paddingRight: showAttachments ? "16rem" : "0" }}
+                // style={{ left: showAttachments ? "-calc(100% + 10rem)" : "-10rem" }}
+            >
+                { !params.sessionid ? (
+                    <IdeasPanel/>
+                ) : null }
+
+                <MessageBox messages={messages} setHasAnswered={setHasAnswered} handleEditMessage={handleEditMessage} />
+                <InputForm userInput={userInput} setUserInput={setUserInput} handleUserInput={handleUserInput} />
+            </div>
+            <div className="relative" >
+                <button
+                    className="absolute top-4 text-gray-400 hover:text-gray-200 focus:outline-none z-20 transition-all "
+                    style={{ right: showAttachments ? "calc(100% + 1rem)" : "1rem" }}
+                    onClick={() => setShowAttachments(!showAttachments)}
+                >
+                    {showAttachments ? (
+                        <ChevronRightIcon className="h-6 w-6" />
+                    ) : (
+                        <ChevronLeftIcon className="h-6 w-6" />
+                    )}
+                </button>
+                <div
+                    className={`absolute right-0 w-64 bg-zinc-800 p-4 transition-transform duration-300 ease-in-out transform border-l border-zinc-700 h-full ${
+                        showAttachments ? "translate-x-0" : "translate-x-full"
+                    } shadow-lg`}
+                >
+                    <h3 className="text-lg font-semibold mb-4">Attachments</h3>
+                    {(attachments || []).map((attachment, index) => (
+                        <Attachment
+                            key={index}
+                            attachment={{ ...attachment, index }}
+                            onToggleActive={handleToggleAttachmentActive}
+                            onDelete={handleDeleteAttachment}
+                        />
+                    ))}
+                </div>
+            </div>
         </div>
     );
 };

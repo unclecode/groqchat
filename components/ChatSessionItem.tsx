@@ -46,7 +46,7 @@ const ChatSessionItem: React.FC<ChatSessionItemProps> = ({ session, sessionManag
     }, []);
 
     return (
-        <div className="flex flex-grow  items-center justify-between p-2 px-3 hover:bg-zinc-800 mx-2 rounded text-zinc-400 relative transition-all">
+        <div className="flex  items-center justify-between p-2 px-3 hover:bg-zinc-800 mx-2 rounded text-zinc-400 relative transition-all">
             <Link
                 key={session._id}
                 href={`/c/${session._id}`}
@@ -61,20 +61,20 @@ const ChatSessionItem: React.FC<ChatSessionItemProps> = ({ session, sessionManag
                 {showContextMenu && (
                     <div
                         ref={contextMenuRef}
-                        className="absolute right-0 mt-2 p-2 bg-zinc-700 text-zinc-300 rounded shadow-md py-2 z-10"
+                        className="absolute right-0 mt-2 p-2 bg-zinc-900 text-zinc-400 rounded shadow-md px-1 z-10 border border-zinc-700  transition-all"
                     >
                         <button
                             onClick={handleRename}
-                            className="block px-4 py-2 hover:bg-zinc-800 w-full text-left rounded-md"
+                            className="block px-4 py-2 hover:bg-zinc-800 w-full text-left rounded-md transition-all"
                         >
-                            <PencilIcon className="h-4 w-4 inline-block mr-2" />
+                            <PencilIcon className="h-4 w-4 inline-block mr-3" />
                             Rename
                         </button>
                         <button
                             onClick={handleDelete}
-                            className="block px-4 py-2 hover:bg-zinc-800 w-full  text-left rounded-md"
+                            className="block px-4 py-2 hover:bg-zinc-800 w-full  text-left rounded-md  transition-all"
                         >
-                            <TrashIcon className="h-4 w-4 inline-block mr-2" />
+                            <TrashIcon className="h-4 w-4 inline-block mr-3" />
                             Delete
                         </button>
                     </div>

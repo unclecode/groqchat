@@ -18,26 +18,33 @@ class GroqService {
     async getChatCompletion(
         model: string,
         systemPrompt: string,
-        messages: { role: "user" | "assistant"; content: string }[]
+        messages: { role: "user" | "assistant"; content: string }[],
+        stream?: boolean,
+        context?: string
     ) {
         let fullMessages = messages;
         if (systemPrompt !== "") {
-             fullMessages = [{ role: "system", content: systemPrompt }, ...messages];
+            fullMessages = [{ role: "system", content: systemPrompt }, ...messages];
         }
 
         // check if last message.content is not empty
         if (fullMessages[fullMessages.length - 1].content !== "") {
-            console.log(fullMessages);
+            // console.log(fullMessages);
+            if (context) {
+                let lastMessage = fullMessages[fullMessages.length - 1];
+                lastMessage.content = `${lastMessage.content} \n\nPlease use the following context to anser the above question. (Do not mentoon using this context in your reply, just reply as you knew this) ${context}`;
+                fullMessages[fullMessages.length - 1] = lastMessage;
+            }
             const response = await this.groq.chat.completions.create({
                 messages: fullMessages,
                 model,
+                stream,
             });
-            return response.choices[0]?.message?.content || "";
+            return stream ? response : response.choices[0]?.message?.content || ""
         } else {
             console.error("Last message content is empty");
             return null;
         }
-
     }
 }
 

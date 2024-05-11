@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Cog8ToothIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import { useParams } from 'next/navigation'
 import Link from "next/link";
 import SettingsModal from "./SettingsModal";
 import {
@@ -22,6 +23,7 @@ const Sidebar = () => {
     const [sessionManager, setSessionManager] = useState(null);
     const [isStorageReady, setIsStorageReady] = useState(false);
     const router = useRouter();
+    const params = useParams<{ sessionId: string }>();
 
     useEffect(() => {
         const initSessionManager = async () => {
@@ -65,10 +67,29 @@ const Sidebar = () => {
 
     const handleRenameSession = (sessionId, newCaption) => {
         setSessions((prevSessions) =>
-            prevSessions.map((session) =>
-                session._id === sessionId ? { ...session, caption: newCaption } : session
-            )
+            prevSessions.map((session) => (session._id === sessionId ? { ...session, caption: newCaption } : session))
         );
+    };
+
+    const handleClearConversations = async (sessionId) => {
+        if (sessionId && window.confirm("Are you sure you want to clear all messages for this session?")) {
+            await sessionManager.clearAllMessages(sessionId);
+            // push to the current session id
+            // router.push(`/c/${sessionId}`);
+            // reload the page
+            // router.refresh();
+            document.location.reload();
+        }
+    };
+
+    const handleClearAllSessions = async () => {
+        if (window.confirm("Are you sure you want to clear all sessions?")) {
+            const confirmText = prompt('Type "yes" to confirm:');
+            if (confirmText === "yes") {
+                await sessionManager.flushDB();
+                router.push("/");
+            }
+        }
     };
 
     return (
@@ -86,7 +107,7 @@ const Sidebar = () => {
                         <PlusIcon className="h-4 w-4 text-zinc-400" />
                     </div>
                 </button>
-                <div className="mt-5 flex flex-col text-zinc-300">
+                <div className="mt-5 flex flex-col text-zinc-300 overflow-auto flex-1">
                     {sessions.length > 0 &&
                         sessions.map((session) => (
                             <ChatSessionItem
@@ -97,7 +118,7 @@ const Sidebar = () => {
                             />
                         ))}
                 </div>
-                <div className="absolute bottom-0 inset-x-0 border-t border-zinc-700 mx-2 py-6 px-2">
+                <div className=" bottom-0 inset-x-0 border-t border-zinc-700 mx-2 py-6 px-2">
                     {/* Sidebar links */}
                     <Link
                         href="#"
@@ -108,33 +129,56 @@ const Sidebar = () => {
                         <p>Settings</p>
                     </Link>
                     <Link
-                        href="/home"
-                        className="flex space-x-2 p-2 hover:bg-zinc-700 mx-2 rounded text-zinc-300 text-sm items-center"
+                        href="#"
+                        onClick={() => handleClearConversations(params.sessionid)}
+                        className={`flex space-x-2 p-2 hover:bg-zinc-700 mx-2 rounded text-zinc-300 text-sm items-center ${
+                            !params.sessionid ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        disabled={!params.sessionid}
                     >
                         <TrashIcon className="h-5 w-5 text-zinc-500" />
                         <p>Clear conversations</p>
                     </Link>
                     <Link
+                        href="#"
+                        onClick={handleClearAllSessions}
+                        disabled={sessions.length === 0}
+                        className={`flex space-x-2 p-2 hover:bg-zinc-700 mx-2 rounded text-zinc-300 text-sm items-center 
+                        ${sessions.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                        <TrashIcon className="h-5 w-5 text-zinc-500" />
+                        <p>Clear all sessions</p>
+                    </Link>
+                    {/* <Link
                         href="/home"
                         className="flex space-x-2 p-2 hover:bg-zinc-700 mx-2 rounded text-zinc-300 text-sm items-center"
                     >
                         <MoonIcon className="h-5 w-5 text-zinc-500" />
                         <p>Dark Mode</p>
-                    </Link>
+                    </Link> */}
                     <Link
-                        href="/home"
+                        href="https://github.com/unclecode/groqchat"
                         className="flex space-x-2 p-2 hover:bg-zinc-700 mx-2 rounded text-zinc-300 text-sm items-center"
                     >
                         <LinkIcon className="h-5 w-5 text-zinc-500" />
-                        <p>Updates</p>
+                        <p>Github</p>
                     </Link>
+                    {/* Add my twitter and then discord */}
                     <Link
+                        href="https://x.com/unclecode"
+                        className="flex space-x-2 p-2 hover:bg-zinc-700 mx-2 rounded text-zinc-300 text-sm items-center"
+                    >
+                        <UserIcon className="h-5 w-5 text-zinc-500" />
+                        <p>X (Twitter)</p>
+                    </Link>
+
+                    {/* <Link
                         href="/home"
                         className="flex space-x-2 p-2 hover:bg-zinc-700 mx-2 rounded text-zinc-300 text-sm items-center"
                     >
                         <ArrowLeftOnRectangleIcon className="h-5 w-5 text-zinc-500" />
                         <p>Logout</p>
-                    </Link>
+                    </Link> */}
                 </div>
             </div>
             {showSettingsModal && <SettingsModal onClose={toggleSettingsModal} />}

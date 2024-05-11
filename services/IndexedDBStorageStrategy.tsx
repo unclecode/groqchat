@@ -40,14 +40,41 @@ export class IndexedDBStorageStrategy extends StorageStrategy {
         });
     }
 
+    async flushDB(): Promise<void> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        return new Promise<void>((resolve, reject) => {
+            const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
+            const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+            const clearRequest = store.clear();
+
+            clearRequest.onsuccess = () => {
+                console.log("All sessions cleared successfully");
+                resolve();
+            };
+
+            clearRequest.onerror = (event) => {
+                console.error("Error clearing sessions:", event);
+                reject(event);
+            };
+        });
+    }
+
     async saveSession(session: ChatSession): Promise<void> {
         if (!this.db) {
             throw new Error("IndexedDB is not available");
         }
 
-        // Check is this the first assistant message
+        // Check if this is the first assistant message
         if (session.messages.length === 2 && session.messages[1].role === "assistant") {
             session.caption = session.messages[1].content.substring(0, 20);
+        }
+
+        // Check if the session has an attachments array, and create an empty one if it doesn't
+        if (!session.attachments) {
+            session.attachments = [];
         }
 
         const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
@@ -164,6 +191,283 @@ export class IndexedDBStorageStrategy extends StorageStrategy {
                         console.error("Error renaming session:", event);
                         reject(event);
                     };
+                } else {
+                    console.error("Session not found");
+                    reject(new Error("Session not found"));
+                }
+            };
+
+            getRequest.onerror = (event) => {
+                console.error("Error retrieving session:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async createThreadFromPosition(sessionId: string, position: number, editedContent: string): Promise<void> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
+        const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+        const getRequest = store.get(sessionId);
+
+        return new Promise<void>((resolve, reject) => {
+            getRequest.onsuccess = (event) => {
+                const session = (event.target as IDBRequest<ChatSession>).result;
+                if (session) {
+                    session.messages[position].content = editedContent;
+                    session.messages = session.messages.slice(0, position + 1);
+                    const putRequest = store.put(session);
+
+                    putRequest.onsuccess = () => {
+                        console.log("Thread created successfully");
+                        resolve();
+                    };
+
+                    putRequest.onerror = (event) => {
+                        console.error("Error creating thread:", event);
+                        reject(event);
+                    };
+                } else {
+                    console.error("Session not found");
+                    reject(new Error("Session not found"));
+                }
+            };
+
+            getRequest.onerror = (event) => {
+                console.error("Error retrieving session:", event);
+                reject(event);
+            };
+        });
+    }
+
+    // services/IndexedDBStorageStrategy.ts
+
+    async createAttachment(sessionId: string, messageIndex: number, source: string, content: string): Promise<void> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
+        const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+        const getRequest = store.get(sessionId);
+
+        return new Promise<void>((resolve, reject) => {
+            getRequest.onsuccess = (event) => {
+                const session = (event.target as IDBRequest<ChatSession>).result;
+                if (session) {
+                    const attachment = {
+                        sessionId,
+                        messageIndex,
+                        createdAt: new Date(),
+                        source,
+                        content,
+                        active: true,
+                    };
+                    session.attachments.push(attachment);
+                    const putRequest = store.put(session);
+
+                    putRequest.onsuccess = () => {
+                        console.log("Attachment created successfully");
+                        resolve();
+                    };
+
+                    putRequest.onerror = (event) => {
+                        console.error("Error creating attachment:", event);
+                        reject(event);
+                    };
+                } else {
+                    console.error("Session not found");
+                    reject(new Error("Session not found"));
+                }
+            };
+
+            getRequest.onerror = (event) => {
+                console.error("Error retrieving session:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async getAttachments(sessionId: string): Promise<any[]> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readonly");
+        const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+        const getRequest = store.get(sessionId);
+
+        return new Promise<any[]>((resolve, reject) => {
+            getRequest.onsuccess = (event) => {
+                const session = (event.target as IDBRequest<ChatSession>).result;
+                if (session) {
+                    console.log("Attachments retrieved successfully");
+                    resolve(session.attachments);
+                } else {
+                    console.error("Session not found");
+                    resolve([]);
+                }
+            };
+
+            getRequest.onerror = (event) => {
+                console.error("Error retrieving attachments:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async deleteAttachment(sessionId: string, attachmentIndex: number): Promise<void> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
+        const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+        const getRequest = store.get(sessionId);
+
+        return new Promise<void>((resolve, reject) => {
+            getRequest.onsuccess = (event) => {
+                const session = (event.target as IDBRequest<ChatSession>).result;
+                if (session) {
+                    session.attachments.splice(attachmentIndex, 1);
+                    const putRequest = store.put(session);
+
+                    putRequest.onsuccess = () => {
+                        console.log("Attachment deleted successfully");
+                        resolve();
+                    };
+
+                    putRequest.onerror = (event) => {
+                        console.error("Error deleting attachment:", event);
+                        reject(event);
+                    };
+                } else {
+                    console.error("Session not found");
+                    reject(new Error("Session not found"));
+                }
+            };
+
+            getRequest.onerror = (event) => {
+                console.error("Error retrieving session:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async updateAttachment(sessionId: string, attachmentIndex: number, active: boolean): Promise<void> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
+        const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+        const getRequest = store.get(sessionId);
+
+        return new Promise<void>((resolve, reject) => {
+            getRequest.onsuccess = (event) => {
+                const session = (event.target as IDBRequest<ChatSession>).result;
+                if (session) {
+                    if (session.attachments[attachmentIndex]) {
+                        session.attachments[attachmentIndex].active = active;
+                        const putRequest = store.put(session);
+
+                        putRequest.onsuccess = () => {
+                            console.log("Attachment updated successfully");
+                            resolve();
+                        };
+
+                        putRequest.onerror = (event) => {
+                            console.error("Error updating attachment:", event);
+                            reject(event);
+                        };
+                    } else {
+                        console.error("Attachment not found");
+                        reject(new Error("Attachment not found"));
+                    }
+                } else {
+                    console.error("Session not found");
+                    reject(new Error("Session not found"));
+                }
+            };
+
+            getRequest.onerror = (event) => {
+                console.error("Error retrieving session:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async clearAllMessages(sessionId: string): Promise<void> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
+        const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+        const getRequest = store.get(sessionId);
+
+        return new Promise<void>((resolve, reject) => {
+            getRequest.onsuccess = (event) => {
+                const session = (event.target as IDBRequest<ChatSession>).result;
+                if (session) {
+                    session.messages = [];
+                    const putRequest = store.put(session);
+
+                    putRequest.onsuccess = () => {
+                        console.log("Messages cleared successfully");
+                        resolve();
+                    };
+
+                    putRequest.onerror = (event) => {
+                        console.error("Error clearing messages:", event);
+                        reject(event);
+                    };
+                } else {
+                    console.error("Session not found");
+                    reject(new Error("Session not found"));
+                }
+            };
+
+            getRequest.onerror = (event) => {
+                console.error("Error retrieving session:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async likeMessage(sessionId: string, messageIndex: number): Promise<void> {
+        if (!this.db) {
+            throw new Error("IndexedDB is not available");
+        }
+
+        const transaction = this.db.transaction([IndexedDBStorageStrategy.STORE_NAME], "readwrite");
+        const store = transaction.objectStore(IndexedDBStorageStrategy.STORE_NAME);
+        const getRequest = store.get(sessionId);
+
+        return new Promise<void>((resolve, reject) => {
+            getRequest.onsuccess = (event) => {
+                const session = (event.target as IDBRequest<ChatSession>).result;
+                if (session) {
+                    if (session.messages[messageIndex]) {
+                        session.messages[messageIndex].liked = true;
+                        const putRequest = store.put(session);
+
+                        putRequest.onsuccess = () => {
+                            console.log("Message liked successfully");
+                            resolve();
+                        };
+
+                        putRequest.onerror = (event) => {
+                            console.error("Error liking message:", event);
+                            reject(event);
+                        };
+                    } else {
+                        console.error("Message not found");
+                        reject(new Error("Message not found"));
+                    }
                 } else {
                     console.error("Session not found");
                     reject(new Error("Session not found"));

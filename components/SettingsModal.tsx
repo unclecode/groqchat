@@ -8,6 +8,7 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const [systemPrompt, setSystemPrompt] = useState(StorageService.getSystemPrompt() || "");
     const [groqAPIToken, setGroqAPIToken] = useState(StorageService.getGroqAPIToken() || "");
     const [databaseType, setDatabaseType] = useState(StorageService.getDatabaseType() || "indexedDB");
+    const [openAIWhisperAPIToken, setOpenAIWhisperAPIToken] = useState(StorageService.getOpenAIWhisperAPIToken() || "");
     const [mongoDBConnectionString, setMongoDBConnectionString] = useState(
         StorageService.getMongoDBConnectionString() || ""
     );
@@ -20,6 +21,7 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         setGroqAPIToken(StorageService.getGroqAPIToken() || "");
         setMongoDBConnectionString(StorageService.getMongoDBConnectionString() || "");
         setDatabaseType(StorageService.getDatabaseType() || "indexedDB");
+        setOpenAIWhisperAPIToken(StorageService.getOpenAIWhisperAPIToken() || "");
     }, []);
 
     const handleModelChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -33,6 +35,7 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         StorageService.saveMongoDBConnectionString(mongoDBConnectionString);
         StorageService.saveModel(selectedModel);
         StorageService.saveDatabaseType(databaseType);
+        StorageService.saveOpenAIWhisperAPIToken(openAIWhisperAPIToken);
 
         onClose();
     };
@@ -55,6 +58,10 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
     const handleDatabaseTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setDatabaseType(event.target.value);
+    }
+
+    const handleOpenAIWhisperAPITokenChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setOpenAIWhisperAPIToken(event.target.value);
     }
 
 
@@ -182,6 +189,18 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                             type="password"
                                             value={groqAPIToken}
                                             onChange={handleGroqAPITokenChange}
+                                            className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full border border-zinc-700"
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label htmlFor="groqAPIToken" className="block text-zinc-300">
+                                            OpenAI Whisper API Token
+                                        </label>
+                                        <input
+                                            id="openAIWhisperAPIToken"
+                                            type="password"
+                                            value={openAIWhisperAPIToken}
+                                            onChange={handleOpenAIWhisperAPITokenChange}
                                             className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full border border-zinc-700"
                                         />
                                     </div>

@@ -1,6 +1,7 @@
 // InputForm.tsx
 import React, { useRef, useEffect, useState } from "react";
-import { PaperClipIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
+import { PaperClipIcon, ArrowUpIcon, MicrophoneIcon, StopIcon } from "@heroicons/react/24/outline";
+import StorageService from "../services/StorageService";
 
 interface InputFormProps {
     userInput: string;
@@ -10,6 +11,15 @@ interface InputFormProps {
 
 const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUserInput }) => {
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const [openAIWhisperAPIToken, setOpenAIWhisperAPIToken] = useState<string | null>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+
+    useEffect(() => {
+        const token = StorageService.getOpenAIWhisperAPIToken();
+        setOpenAIWhisperAPIToken(token);
+    }, []);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -23,16 +33,83 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
         if (textArea) {
             textArea.style.height = "auto";
             textArea.style.height = `${textArea.scrollHeight}px`;
-            textArea.style.maxHeight = "350px"; // Set the maximum height here
+            textArea.style.maxHeight = "350px";
             textArea.style.overflowY = textArea.scrollHeight > 150 ? "scroll" : "hidden";
         }
     }, [userInput]);
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            audioChunksRef.current = [];
+
+            mediaRecorder.addEventListener("dataavailable", (event) => {
+                console.log("Data available");
+                audioChunksRef.current.push(event.data);
+            });
+
+            mediaRecorder.start();
+            setIsRecording(true);
+        } catch (error) {
+            console.error("Error starting recording:", error);
+            setUserInput("Error: Unable to start recording. Please check your microphone permissions.");
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+            mediaRecorderRef.current.addEventListener("stop", transcribeAudio);
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+        }
+    };
+
+    const transcribeAudio = async () => {
+        try {
+            const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+
+            // Create a new FormData object and append the audio data
+            const formData = new FormData();
+            formData.append("file", audioBlob, "recording.webm");
+            formData.append("model", "whisper-1");
+            formData.append("response_format", "text");
+
+            // Send the request to the OpenAI API
+            const transcriptionResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${openAIWhisperAPIToken}`,
+                },
+                body: formData,
+            });
+
+            if (transcriptionResponse.ok) {
+                const data = await transcriptionResponse.text();
+                setUserInput(data.trim());
+            } else {
+                const errorData = await transcriptionResponse.json();
+                setUserInput(`Error: ${errorData.error.message}`);
+            }
+        } catch (error) {
+            console.error("Error transcribing audio:", error);
+            setUserInput("Error: Unable to transcribe audio. Please try again.");
+        }
+    };
+
+    const handleMicrophoneClick = () => {
+        if (isRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    };
 
     return (
         <div className="mx-auto max-w-3xl w-full p-4 pt-0 pb-8">
             <div className="flex space-x-2 w-full bg-zinc-800 rounded-xl p-2 border border-zinc-700 items-end">
                 <button className="flex items-center space-x-2 pl-2 text-white mb-2">
-                    {/* Attachment icon */}
                     <PaperClipIcon className="h-5 w-5" />
                 </button>
                 <textarea
@@ -44,15 +121,28 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
                     onKeyDown={handleKeyDown}
                     rows={1}
                 />
+                {openAIWhisperAPIToken && (
+                    <button
+                        type="button"
+                        onClick={handleMicrophoneClick}
+                        className={`py-2 px-2 mb-1 rounded-md flex items-center justify-center transition-all ${
+                            isRecording ? "bg-red-500 " : "bg-zinc-700 hover:bg-zinc-600"
+                        }`}
+                    >
+                        {isRecording ? (
+                            <StopIcon className="h-4 w-4 text-white transform px-0 animate-ping" />
+                        ) : (
+                            <MicrophoneIcon className="h-4 w-4 text-zinc-100 transform px-0 hover:text-zinc-200" />
+                        )}
+                    </button>
+                )}
                 <button
                     type="button"
                     onClick={handleUserInput}
                     className={`py-2 px-2 mb-1 rounded-md flex items-center justify-center ${
-                        userInput.trim() ? "bg-zinc-200 " : "bg-zinc-700"
+                        userInput.trim() ? "bg-zinc-200" : "bg-zinc-700"
                     }`}
-                    
                 >
-                    {/* Up arrow icon */}
                     <ArrowUpIcon className="h-4 w-4 text-zinc-900 transform px-0" />
                 </button>
             </div>

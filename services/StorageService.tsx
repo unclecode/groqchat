@@ -8,6 +8,7 @@ class StorageService {
     private static readonly DEFAULT_MODEL_KEY = "groqchat-defaultModel";
     private static readonly MODEL_KEY = "groqchat-currentSessionModel";
     private static readonly CURRENT_SESSION_MODEL_KEY = "groqchat-currentSessionModel";
+    private static readonly OPENAI_WHISPER_KEY = "groqchat-openaiWhisper";
 
     static getMode(): string | null {
         return localStorage.getItem(StorageService.MODE_KEY);
@@ -71,6 +72,14 @@ class StorageService {
 
     static saveDatabaseType(databaseType: string): void {
         localStorage.setItem(StorageService.DATABASE_TYPE, databaseType);
+    }
+
+    static getOpenAIWhisperAPIToken(): string | null {
+        return localStorage.getItem(StorageService.OPENAI_WHISPER_KEY);
+    }
+
+    static saveOpenAIWhisperAPIToken(openAIWhisper: string): void {
+        localStorage.setItem(StorageService.OPENAI_WHISPER_KEY, openAIWhisper);
     }
 
     static clear(): void {

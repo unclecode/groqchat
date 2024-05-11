@@ -8,6 +8,10 @@ export class LocalStorageStrategy extends StorageStrategy {
         return true; // LocalStorage is always ready
     }
 
+    async flushDB(): Promise<void> {
+        localStorage.clear();
+    }
+
     async saveSession(session: ChatSession): Promise<void> {
         // Check is this the first assistant message
         if (session.messages.length === 2 && session.messages[1].role === "assistant") {
@@ -46,6 +50,81 @@ export class LocalStorageStrategy extends StorageStrategy {
         if (sessionJSON) {
             const session = JSON.parse(sessionJSON);
             session.caption = newCaption;
+            localStorage.setItem(LocalStorageStrategy.SESSION_KEY, JSON.stringify(session));
+        }
+    }
+
+    async createThreadFromPosition(position: number, editedContent: string): Promise<void> {
+        const sessionJSON = localStorage.getItem(LocalStorageStrategy.SESSION_KEY);
+        if (sessionJSON) {
+            const session = JSON.parse(sessionJSON);
+            session.messages.splice(position, 0, { role: "user", content: editedContent, createdAt: new Date() });
+            localStorage.setItem(LocalStorageStrategy.SESSION_KEY, JSON.stringify(session));
+        }
+    }
+
+    async createAttachment(
+        messageIndex: number,
+        source: string,
+        content: string
+    ): Promise<void> {
+        const sessionJSON = localStorage.getItem(LocalStorageStrategy.SESSION_KEY);
+        if (sessionJSON) {
+            const session = JSON.parse(sessionJSON);
+            session.attachments.push({
+                sessionId: session._id,
+                messageIndex,
+                createdAt: new Date(),
+                source,
+                content,
+                active: true,
+            });
+            localStorage.setItem(LocalStorageStrategy.SESSION_KEY, JSON.stringify(session));
+        }
+    }
+
+    async getAttachments(): Promise<any[]> {
+        const sessionJSON = localStorage.getItem(LocalStorageStrategy.SESSION_KEY);
+        if (sessionJSON) {
+            const session = JSON.parse(sessionJSON);
+            return session.attachments;
+        }
+
+        return [];
+    }
+
+    async deleteAttachment(attachmentId: number): Promise<void> {
+        const sessionJSON = localStorage.getItem(LocalStorageStrategy.SESSION_KEY);
+        if (sessionJSON) {
+            const session = JSON.parse(sessionJSON);
+            session.attachments.splice(attachmentId, 1);
+            localStorage.setItem(LocalStorageStrategy.SESSION_KEY, JSON.stringify(session));
+        }
+    }
+
+    async updateAttachment(attachmentId: number, active: boolean): Promise<void> {
+        const sessionJSON = localStorage.getItem(LocalStorageStrategy.SESSION_KEY);
+        if (sessionJSON) {
+            const session = JSON.parse(sessionJSON);
+            session.attachments[attachmentId].active = active;
+            localStorage.setItem(LocalStorageStrategy.SESSION_KEY, JSON.stringify(session));
+        }
+    }
+
+    async likeMessage(messageIndex: number): Promise<void> {
+        const sessionJSON = localStorage.getItem(LocalStorageStrategy.SESSION_KEY);
+        if (sessionJSON) {
+            const session = JSON.parse(sessionJSON);
+            session.messages[messageIndex].liked = true;
+            localStorage.setItem(LocalStorageStrategy.SESSION_KEY, JSON.stringify(session));
+        }
+    }
+
+    async clearAllMessages(): Promise<void> {
+        const sessionJSON = localStorage.getItem(LocalStorageStrategy.SESSION_KEY);
+        if (sessionJSON) {
+            const session = JSON.parse(sessionJSON);
+            session.messages = [];
             localStorage.setItem(LocalStorageStrategy.SESSION_KEY, JSON.stringify(session));
         }
     }

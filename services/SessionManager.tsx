@@ -5,6 +5,7 @@ import { MongoDBStorageStrategy } from "./MongoDBStorageStrategy";
 import { LocalStorageStrategy } from "./LocalStorageStrategy";
 import { IndexedDBStorageStrategy } from "./IndexedDBStorageStrategy";
 import StorageService from "./StorageService";
+import { AttachmentModel } from "./models";
 
 export default class SessionManager {
     private storageStrategy: StorageStrategy;
@@ -37,6 +38,7 @@ export default class SessionManager {
             caption: "New session",
             messages: [],
             createdAt: new Date(),
+            level: 0,
         };
         await this.storageStrategy.saveSession(session);
         return sessionId;
@@ -70,4 +72,45 @@ export default class SessionManager {
         await this.waitForStorageReady();
         await this.storageStrategy.renameSession(sessionId, newCaption);
     }
+
+    async createThreadFromPosition(sessionId: string, position: number, editedContent: string): Promise<void> {
+        await this.waitForStorageReady();
+        await this.storageStrategy.createThreadFromPosition(sessionId, position, editedContent);
+    }
+
+    async createAttachment(sessionId: string, messageIndex: number, source: string, content: string): Promise<void> {
+        await this.waitForStorageReady();
+        await this.storageStrategy.createAttachment(sessionId, messageIndex, source, content);
+    }
+    
+    async getAttachments(sessionId: string): Promise<any[]> {
+        await this.waitForStorageReady();
+        return this.storageStrategy.getAttachments(sessionId);
+    }
+    
+    async deleteAttachment(sessionId: string, attachmentIndex: number): Promise<void> {
+        await this.waitForStorageReady();
+        await this.storageStrategy.deleteAttachment(sessionId, attachmentIndex);
+    }
+    
+    async updateAttachment(sessionId: string, attachmentIndex: number, active: boolean): Promise<void> {
+        await this.waitForStorageReady();
+        await this.storageStrategy.updateAttachment(sessionId, attachmentIndex, active);
+    }
+
+    async likeMessage(sessionId: string, messageIndex: number): Promise<void> {
+        await this.waitForStorageReady();
+        await this.storageStrategy.likeMessage(sessionId, messageIndex);
+    }
+
+    async clearAllMessages(sessionId: string): Promise<void> {
+        await this.waitForStorageReady();
+        await this.storageStrategy.clearAllMessages(sessionId);
+    }
+
+    async flushDB(): Promise<void> {
+        await this.waitForStorageReady();
+        await this.storageStrategy.flushDB();
+    }
+    
 }

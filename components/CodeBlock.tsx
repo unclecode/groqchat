@@ -8,6 +8,12 @@ interface CodeBlockProps {
 }
 
 const renderToString = (children: React.ReactNode): string => {
+    if (typeof children === "string") {
+        return children;
+    }
+    if (children === null || children === undefined) {
+        return "";
+    }
     return React.Children.map(children, (child) => {
         if (typeof child === "string") {
             return child;

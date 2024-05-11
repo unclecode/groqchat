@@ -9,9 +9,9 @@ const MainLayout = ({ sessionId, hasAnswered, setHasAnswered }) => {
     <div className="h-screen bg-zinc-800 text-zinc-300 flex">
       <Sidebar />
 
-      <div className="relative flex flex-1 flex-col h-full text-zinc-400">
+      <div className="flex flex-1 flex-col h-full text-zinc-400 ">
         <ModelSelector />
-        <IdeasPanel hasAnswered={hasAnswered} />
+        {/* <IdeasPanel hasAnswered={hasAnswered} /> */}
         <ChatWindow sessionId={sessionId} setHasAnswered={setHasAnswered} />
       </div>
     </div>
