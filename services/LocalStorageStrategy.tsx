@@ -1,11 +1,45 @@
 // services/LocalStorageStrategy.ts
-import { StorageStrategy, ChatSession } from "./StorageStrategy";
+import { StorageStrategy, ChatSession, StorageInfo } from "./StorageStrategy";
 
 export class LocalStorageStrategy extends StorageStrategy {
     private static readonly SESSION_KEY = "groqchat-chatSession";
 
     async isReady(): Promise<boolean> {
         return true; // LocalStorage is always ready
+    }
+
+    async getStorageInfo(): Promise<StorageInfo> {
+        try {
+            const usedStorage = this.getLocalStorageUsage();
+            const availableStorage = 5 * 1024 * 1024 - usedStorage; // Assuming 5MB quota
+            const totalStorage = 5 * 1024 * 1024; // Assuming 5MB quota
+
+            return {
+                availableStorage,
+                usedStorage,
+                totalStorage,
+            };
+        } catch (error) {
+            console.error("Error retrieving storage information:", error);
+            return {
+                availableStorage: 0,
+                usedStorage: 0,
+                totalStorage: 0,
+            };
+        }
+    }
+
+    private getLocalStorageUsage(): number {
+        let totalSize = 0;
+        for (const key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    totalSize += value.length * 2; // Assuming UTF-16 encoding
+                }
+            }
+        }
+        return totalSize;
     }
 
     async flushDB(): Promise<void> {
@@ -63,11 +97,7 @@ export class LocalStorageStrategy extends StorageStrategy {
         }
     }
 
-    async createAttachment(
-        messageIndex: number,
-        source: string,
-        content: string
-    ): Promise<void> {
+    async createAttachment(messageIndex: number, source: string, content: string): Promise<void> {
         const sessionJSON = localStorage.getItem(LocalStorageStrategy.SESSION_KEY);
         if (sessionJSON) {
             const session = JSON.parse(sessionJSON);

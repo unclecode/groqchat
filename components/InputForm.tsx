@@ -13,12 +13,14 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [openAIWhisperAPIToken, setOpenAIWhisperAPIToken] = useState<string | null>(null);
+    const [groqAPIToken, setGroqAPIToken] = useState<string | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
     useEffect(() => {
         const token = StorageService.getOpenAIWhisperAPIToken();
         setOpenAIWhisperAPIToken(token);
+        setGroqAPIToken(StorageService.getGroqAPIToken());
     }, []);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -73,14 +75,23 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
             // Create a new FormData object and append the audio data
             const formData = new FormData();
             formData.append("file", audioBlob, "recording.webm");
-            formData.append("model", "whisper-1");
+            // formData.append("model", "whisper-1");
+            formData.append("model", "whisper-large-v3");
             formData.append("response_format", "text");
-
+            
             // Send the request to the OpenAI API
-            const transcriptionResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+            // const transcriptionResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+                //     method: "POST",
+                //     headers: {
+                    //         Authorization: `Bearer ${openAIWhisperAPIToken}`,
+                    //     },
+                    //     body: formData,
+                    // });
+                    
+            const transcriptionResponse = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
                 method: "POST",
                 headers: {
-                    Authorization: `Bearer ${openAIWhisperAPIToken}`,
+                    Authorization: `Bearer ${groqAPIToken}`,
                 },
                 body: formData,
             });

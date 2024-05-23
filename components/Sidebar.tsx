@@ -181,7 +181,7 @@ const Sidebar = () => {
                     </Link> */}
                 </div>
             </div>
-            {showSettingsModal && <SettingsModal onClose={toggleSettingsModal} />}
+            {showSettingsModal && <SettingsModal onClose={toggleSettingsModal} sessionManager={sessionManager} />}
         </div>
     );
 };

@@ -1,6 +1,6 @@
 // services/SessionManager.ts
 import { v4 as uuidv4 } from "uuid";
-import { StorageStrategy, ChatSession } from "./StorageStrategy";
+import { StorageStrategy, ChatSession, StorageInfo } from "./StorageStrategy";
 import { MongoDBStorageStrategy } from "./MongoDBStorageStrategy";
 import { LocalStorageStrategy } from "./LocalStorageStrategy";
 import { IndexedDBStorageStrategy } from "./IndexedDBStorageStrategy";
@@ -111,6 +111,11 @@ export default class SessionManager {
     async flushDB(): Promise<void> {
         await this.waitForStorageReady();
         await this.storageStrategy.flushDB();
+    }
+
+    async getStorageInfo(): Promise<StorageInfo> {
+        await this.waitForStorageReady();
+        return this.storageStrategy.getStorageInfo();
     }
     
 }

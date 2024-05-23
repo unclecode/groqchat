@@ -1,5 +1,5 @@
 // services/IndexedDBStorageStrategy.ts
-import { StorageStrategy, ChatSession } from "./StorageStrategy";
+import { StorageStrategy, ChatSession, StorageInfo } from "./StorageStrategy";
 
 export class IndexedDBStorageStrategy extends StorageStrategy {
     private static readonly DB_NAME = "groqchat";
@@ -14,6 +14,28 @@ export class IndexedDBStorageStrategy extends StorageStrategy {
 
     async isReady(): Promise<boolean> {
         return this.ready;
+    }
+
+    async getStorageInfo(): Promise<StorageInfo> {
+        try {
+            const storageEstimate = await navigator.storage.estimate();
+            const availableStorage = storageEstimate.quota ?? 0;
+            const usedStorage = storageEstimate.usage ?? 0;
+            const totalStorage = availableStorage + usedStorage;
+
+            return {
+                availableStorage,
+                usedStorage,
+                totalStorage,
+            };
+        } catch (error) {
+            console.error("Error retrieving storage information:", error);
+            return {
+                availableStorage: 0,
+                usedStorage: 0,
+                totalStorage: 0,
+            };
+        }
     }
 
     private async initDB(): Promise<boolean> {

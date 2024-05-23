@@ -9,7 +9,7 @@ import InputForm from "../components/InputForm";
 import SessionManager from "../services/SessionManager";
 
 const extractUrls = (text: string): string[] => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urlRegex = /@(https?:\/\/[^\s]+)/g;
     return text.match(urlRegex) || [];
 };
 

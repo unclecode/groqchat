@@ -100,6 +100,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
                 sessionId = newSessionId;
             }
 
+            // Any URL followed by @ will be considered as a URL to be crawled
             const urls = extractUrls(userInput);
             const inputWithoutUrls = removeUrls(userInput);
 

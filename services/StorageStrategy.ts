@@ -8,6 +8,13 @@ export interface ChatSession {
     attachments: { sessionId: string; messageIndex: number; createdAt: Date; source: string; content: string; active: boolean }[];
 }
 
+export interface StorageInfo {
+    availableStorage: number;
+    usedStorage: number;
+    totalStorage: number;
+    // Add more properties as needed
+}
+
 export abstract class StorageStrategy {
     abstract isReady(): Promise<boolean>;
     abstract flushDB(): Promise<void>;
@@ -28,6 +35,8 @@ export abstract class StorageStrategy {
     abstract updateAttachment(sessionId: string, attachmentId: number, active: boolean): Promise<void>;
     abstract likeMessage(sessionId: string, messageIndex: number): Promise<void>;
     abstract clearAllMessages(sessionId: string): Promise<void>;
+    abstract getStorageInfo(): Promise<StorageInfo>;
+}
     
 
-// 
+ 

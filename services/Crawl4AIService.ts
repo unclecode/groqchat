@@ -13,16 +13,17 @@ class Crawl4AIService {
         
         const data = {
             urls: urls,
-            provider_model: "openai/gpt-3.5-turbo",
-            api_token: StorageService.getOpenAIWhisperAPIToken(),
-            include_raw_html: false,
-            forced: false,
+            // provider_model: "openai/gpt-3.5-turbo",
+            // api_token: StorageService.getOpenAIWhisperAPIToken(),
+            // include_raw_html: false,
+            bypass_cache: false,
             extract_blocks: false,
-            word_count_threshold: 10
+            // word_count_threshold: 10
         };
 
         try {
-            const response = await fetch("https://crawl4ai.uccode.io/crawl", {
+            const response = await fetch("https://crawl4ai.com/crawl", {
+            // const response = await fetch("https://crawl4ai.uccode.io/crawl", {
             // const response = await fetch("http://0.0.0.0:8000/crawl", {
                 method: "POST",
                 headers: {

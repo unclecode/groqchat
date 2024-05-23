@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import StorageService from "../services/StorageService";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import SessionManager from "../services/SessionManager";
 
-const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose, sessionManager }) => {
     const [mode, setMode] = useState(StorageService.getMode() || "dark");
     const [selectedModel, setSelectedModel] = useState(StorageService.getModel() || "llama3-8b-8192");
     const [systemPrompt, setSystemPrompt] = useState(StorageService.getSystemPrompt() || "");
@@ -13,6 +14,34 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         StorageService.getMongoDBConnectionString() || ""
     );
     const [selectedSetting, setSelectedSetting] = useState("general");
+    const [storageInfo, setStorageInfo] = useState<StorageInfo>({
+        availableStorage: 0,
+        usedStorage: 0,
+        totalStorage: 0,
+    });
+
+    React.useEffect(() => {
+        const fetchStorageInfo = async () => {
+            if (sessionManager) {
+                const info = await sessionManager.getStorageInfo();
+                setStorageInfo(info);
+            }
+        };
+
+        fetchStorageInfo();
+    }, [sessionManager]);
+
+    const formatStorageSize = (size: number): string => {
+        if (size < 1024) {
+            return `${size} bytes`;
+        } else if (size < 1024 * 1024) {
+            return `${(size / 1024).toFixed(2)} KB`;
+        } else if (size < 1024 * 1024 * 1024) {
+            return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+        } else {
+            return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+        }
+    };
 
     React.useEffect(() => {
         setMode(StorageService.getMode() || "dark");
@@ -58,12 +87,11 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
     const handleDatabaseTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setDatabaseType(event.target.value);
-    }
+    };
 
     const handleOpenAIWhisperAPITokenChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setOpenAIWhisperAPIToken(event.target.value);
-    }
-
+    };
 
     return (
         <div
@@ -86,24 +114,25 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                         <div className="w-64 border-r border-zinc-700">
                             <ul className="space-y-2 p-4">
                                 <li
-                                    className={`text-zinc-300 cursor-pointer ${
-                                        selectedSetting === "general" ? "bg-zinc-600" : ""
+                                    className={`text-zinc-300 cursor-pointer hover:bg-zinc-700 rounded p-2 transition-all
+                                    ${
+                                        selectedSetting === "general" ? "font-semibold" : ""
                                     }`}
                                     onClick={() => setSelectedSetting("general")}
                                 >
                                     General
                                 </li>
                                 <li
-                                    className={`text-zinc-300 cursor-pointer ${
-                                        selectedSetting === "database" ? "bg-zinc-600" : ""
+                                    className={`text-zinc-300 cursor-pointer  hover:bg-zinc-700 rounded p-2 transition-all ${
+                                        selectedSetting === "database" ? "font-semibold" : ""
                                     }`}
                                     onClick={() => setSelectedSetting("database")}
                                 >
                                     Database
                                 </li>
                                 <li
-                                    className={`text-zinc-300 cursor-pointer ${
-                                        selectedSetting === "credentials" ? "bg-zinc-600" : ""
+                                    className={`text-zinc-300 cursor-pointer  hover:bg-zinc-700 rounded p-2 transition-all ${
+                                        selectedSetting === "credentials" ? "font-semibold" : ""
                                     }`}
                                     onClick={() => setSelectedSetting("credentials")}
                                 >
@@ -111,10 +140,10 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                 </li>
                             </ul>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4">
+                        <div className="flex flex-col flex-1 overflow-y-auto p-4">
                             {selectedSetting === "general" && (
-                                <>
-                                    <div className="mb-4">
+                                <div className="flex flex-col flex-grow">
+                                    <div className="mb-4 space-y-2">
                                         <label htmlFor="model" className="block text-zinc-300">
                                             Model
                                         </label>
@@ -127,10 +156,9 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                             <option value="">Select a model</option>
                                             <option value="llama3-8b-8192">Llama3-8B-8192</option>
                                             <option value="llama3-70b-8192">Llama3-70B-8192</option>
-                                            
                                         </select>
                                     </div>
-                                    <div className="mb-4">
+                                    <div className="mb-4 space-y-2">
                                         <label htmlFor="mode" className="block text-zinc-300">
                                             Mode
                                         </label>
@@ -144,7 +172,7 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                             <option value="dark">Dark</option>
                                         </select>
                                     </div>
-                                    <div className="mb-4">
+                                    <div className="mb-4 space-y-2">
                                         <label htmlFor="systemPrompt" className="block text-zinc-300">
                                             System Prompt
                                         </label>
@@ -155,12 +183,12 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                             className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full h-32 border border-zinc-700"
                                         ></textarea>
                                     </div>
-                                </>
+                                </div>
                             )}
                             {selectedSetting === "database" && (
                                 // Check for database source type, IndexedDB, LocalStorage or MongoDB
-                                <>
-                                    <div className="mb-4">
+                                <div className="flex flex-col flex-grow">
+                                    <div className="mb-4 space-y-2">
                                         <label htmlFor="databaseSourceType" className="block text-zinc-300">
                                             Database Source Type
                                         </label>
@@ -169,18 +197,42 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                             className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full border border-zinc-700"
                                         >
                                             <option value="indexeddb">IndexedDB</option>
-                                            <option disabled value="localstorage">LocalStorage</option>
-                                            <option disabled value="mongodb">MongoDB</option>
+                                            <option disabled value="localstorage">
+                                                LocalStorage
+                                            </option>
+                                            <option disabled value="mongodb">
+                                                MongoDB
+                                            </option>
                                         </select>
                                     </div>
-                                </>
+                                    <div className="mt-4 space-y-2">
+                                        <div className="mb-4">
+                                            <div className="text-sm font-medium text-gray-500">Storage Usage</div>
+                                            <div className="mt-2">
+                                                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                                    <div
+                                                        className="bg-blue-600 h-2.5 rounded-full"
+                                                        style={{
+                                                            width: `${
+                                                                (storageInfo.usedStorage / storageInfo.totalStorage) *
+                                                                100
+                                                            }%`,
+                                                        }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 flex justify-between text-sm font-medium text-gray-500">
+                                                <div>Used: {formatStorageSize(storageInfo.usedStorage)}</div>
+                                                <div>Available: {formatStorageSize(storageInfo.availableStorage)}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             )}
 
-
-
                             {selectedSetting === "credentials" && (
-                                <>
-                                    <div className="mb-4">
+                                <div className="flex flex-col flex-grow">
+                                    <div className="mb-4 space-y-2">
                                         <label htmlFor="groqAPIToken" className="block text-zinc-300">
                                             Groq API Token
                                         </label>
@@ -192,7 +244,7 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                             className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full border border-zinc-700"
                                         />
                                     </div>
-                                    <div className="mb-4">
+                                    <div className="mb-4 space-y-2">
                                         <label htmlFor="groqAPIToken" className="block text-zinc-300">
                                             OpenAI Whisper API Token
                                         </label>
@@ -204,8 +256,12 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                             className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full border border-zinc-700"
                                         />
                                     </div>
-                                    <div className="mb-4 disabled" disabled>
-                                        <label disabled htmlFor="mongoDBConnectionString" className="block text-zinc-300">
+                                    <div className="mb-4  space-y-2 disabled" disabled>
+                                        <label
+                                            disabled
+                                            htmlFor="mongoDBConnectionString"
+                                            className="block text-zinc-300"
+                                        >
                                             MongoDB Connection String
                                         </label>
                                         <input
@@ -217,12 +273,12 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                             className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full border border-zinc-700"
                                         />
                                     </div>
-                                </>
+                                </div>
                             )}
                             <div className="flex justify-end">
                                 <button
                                     onClick={handleSaveSettings}
-                                    className="bg-zinc-700 text-zinc-300 py-2 px-4 rounded-md"
+                                    className="bg-zinc-700 text-zinc-300 py-2 px-4 rounded-md hover:bg-zinc-600 transition-all"
                                 >
                                     Save Settings
                                 </button>
