@@ -74,7 +74,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
     
         if (userInput.trim() && sessionManager && isStorageReady) {
             if (!sessionId) {
-                const model = StorageService.getCurrentSessionModel() || StorageService.getDefaultModel() || "llama3-8b-8192";
+                const model = StorageService.getCurrentSessionModel() || StorageService.getDefaultModel() || "llama-3.1-8b-instant";
                 const newSessionId = await sessionManager.createSession(model);
                 setMessages([]);
                 router.replace(`/c/${newSessionId}`);
@@ -125,7 +125,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
         const handleAssistantResponse = async () => {
             if (messages.length > 0 && messages[messages.length - 1].role === "user") {
                 console.log(messages)
-                const model = StorageService.getCurrentSessionModel() || "llama3-8b-8192";
+                const model = StorageService.getCurrentSessionModel() || "llama-3.1-8b-instant";
                 const systemPrompt = StorageService.getSystemPrompt() || "";
                 const groqService = new GroqService();
                 let cleanMessages = messages.map(({ role, content }) => ({ role, content }));

@@ -5,7 +5,7 @@ import SessionManager from "../services/SessionManager";
 
 const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose, sessionManager }) => {
     const [mode, setMode] = useState(StorageService.getMode() || "dark");
-    const [selectedModel, setSelectedModel] = useState(StorageService.getModel() || "llama3-8b-8192");
+    const [selectedModel, setSelectedModel] = useState(StorageService.getModel() || "llama-3.1-8b-instant");
     const [systemPrompt, setSystemPrompt] = useState(StorageService.getSystemPrompt() || "");
     const [groqAPIToken, setGroqAPIToken] = useState(StorageService.getGroqAPIToken() || "");
     const [databaseType, setDatabaseType] = useState(StorageService.getDatabaseType() || "indexedDB");
@@ -45,7 +45,7 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose, sessionMana
 
     React.useEffect(() => {
         setMode(StorageService.getMode() || "dark");
-        setSelectedModel(StorageService.getModel() || "llama3-8b-8192");
+        setSelectedModel(StorageService.getModel() || "llama-3.1-8b-instant");
         setSystemPrompt(StorageService.getSystemPrompt() || "");
         setGroqAPIToken(StorageService.getGroqAPIToken() || "");
         setMongoDBConnectionString(StorageService.getMongoDBConnectionString() || "");
@@ -154,9 +154,9 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose, sessionMana
                                             className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full border border-zinc-700"
                                         >
                                             <option value="">Select a model</option>
-                                            <option value="llama3.1-8b-instant">Llama3-8B-8192</option>
-                                            <option value="llama3.1-70b-versatile">Llama3-70B-8192</option>
-                                            <option value="llama3.1-405b-reasoning">Llama3-70B-8192</option>
+                                            <option value="llama-3.1-8b-instant">Llama3-8B-8192</option>
+                                            <option value="llama-3.1-70b-versatile">Llama3-70B-8192</option>
+                                            <option value="llama-3.1-405b-reasoning">Llama3-70B-8192</option>
                                             <option value="llama3-8b-8192">Llama3-8B-8192</option>
                                             <option value="llama3-70b-8192">Llama3-70B-8192</option>
                                         </select>

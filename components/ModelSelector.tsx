@@ -4,32 +4,51 @@ import StorageService from "../services/StorageService";
 import { ChevronDownIcon, CheckIcon } from "@heroicons/react/24/outline";
 // import models from '../public/models.json';
 
+
 const models = [
     {
-        id: "llama3-8b-8192",
-        name: "LLaMA3 8b",
-        description: "llama3-8b-8192\nDeveloper: Meta\nContext Window: 8,192 tokens",
-        provider: "Groq",
+      "id": "llama-3.1-8b-instant",
+      "name": "Llama 3.1 8B (Preview)",
+      "description": "llama-3.1-8b-instant\nDeveloper: Meta\nContext Window: 131,072 tokens",
+      "provider": "Groq"
     },
     {
-        id: "llama3-70b-8192",
-        name: "LLaMA3 70b",
-        description: "llama3-70b-8192\nDeveloper: Meta\nContext Window: 8,192 tokens",
-        provider: "Groq",
+      "id": "llama-3.1-70b-versatile",
+      "name": "Llama 3.1 70B (Preview)",
+      "description": "llama-3.1-70b-versatile\nDeveloper: Meta\nContext Window: 131,072 tokens",
+      "provider": "Groq"
     },
     {
-        id: "mixtral-8x7b-32768",
-        name: "Mixtral 8x7b",
-        description: "mixtral-8x7b-32768\nDeveloper: Mistral\nContext Window: 32,768 tokens",
-        provider: "Groq",
+      "id": "llama-3.1-405b-reasoning",
+      "name": "Llama 3.1 405B (Preview)",
+      "description": "llama-3.1-405b-reasoning\nDeveloper: Meta\nContext Window: 131,072 tokens",
+      "provider": "Groq"
     },
     {
-        id: "gemma-7b-it",
-        name: "Gemma 7b",
-        description: "gemma-7b-it\nDeveloper: Google\nContext Window: 8,192 tokens",
-        provider: "Groq",
+      "id": "llama3-8b-8192",
+      "name": "LLaMA3 8b",
+      "description": "llama3-8b-8192\nDeveloper: Meta\nContext Window: 8,192 tokens",
+      "provider": "Groq"
     },
-];
+    {
+      "id": "llama3-70b-8192",
+      "name": "LLaMA3 70b",
+      "description": "llama3-70b-8192\nDeveloper: Meta\nContext Window: 8,192 tokens",
+      "provider": "Groq"
+    },
+    {
+      "id": "mixtral-8x7b-32768",
+      "name": "Mixtral 8x7b",
+      "description": "mixtral-8x7b-32768\nDeveloper: Mistral\nContext Window: 32,768 tokens",
+      "provider": "Groq"
+    },
+    {
+      "id": "gemma-7b-it",
+      "name": "Gemma 7b",
+      "description": "gemma-7b-it\nDeveloper: Google\nContext Window: 8,192 tokens",
+      "provider": "Groq"
+    }
+  ]
 
 const ModelSelector = () => {
     const [isOpen, setIsOpen] = useState(false);
