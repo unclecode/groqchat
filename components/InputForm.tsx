@@ -16,6 +16,8 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
     const [groqAPIToken, setGroqAPIToken] = useState<string | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
+    const [showUrlModal, setShowUrlModal] = useState(false);
+    const [urlInput, setUrlInput] = useState("");
 
     useEffect(() => {
         const token = StorageService.getOpenAIWhisperAPIToken();
@@ -78,16 +80,16 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
             // formData.append("model", "whisper-1");
             formData.append("model", "whisper-large-v3");
             formData.append("response_format", "text");
-            
+
             // Send the request to the OpenAI API
             // const transcriptionResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-                //     method: "POST",
-                //     headers: {
-                    //         Authorization: `Bearer ${openAIWhisperAPIToken}`,
-                    //     },
-                    //     body: formData,
-                    // });
-                    
+            //     method: "POST",
+            //     headers: {
+            //         Authorization: `Bearer ${openAIWhisperAPIToken}`,
+            //     },
+            //     body: formData,
+            // });
+
             const transcriptionResponse = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
                 method: "POST",
                 headers: {
@@ -109,6 +111,19 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
         }
     };
 
+    const handleAttachmentClick = () => {
+        setShowUrlModal(true);
+    };
+
+    const handleUrlSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (urlInput.trim()) {
+            setUserInput((prev) => `${prev} @${urlInput.trim()}`.trim());
+            setUrlInput("");
+            setShowUrlModal(false);
+        }
+    };
+
     const handleMicrophoneClick = () => {
         if (isRecording) {
             stopRecording();
@@ -120,7 +135,7 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
     return (
         <div className="mx-auto max-w-3xl w-full p-4 pt-0 pb-8">
             <div className="flex space-x-2 w-full bg-zinc-800 rounded-xl p-2 border border-zinc-700 items-end">
-                <button className="flex items-center space-x-2 pl-2 text-white mb-2">
+                <button className="flex items-center space-x-2 pl-2 text-white mb-2" onClick={handleAttachmentClick}>
                     <PaperClipIcon className="h-5 w-5" />
                 </button>
                 <textarea
@@ -157,6 +172,40 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
                     <ArrowUpIcon className="h-4 w-4 text-zinc-900 transform px-0" />
                 </button>
             </div>
+
+            {/* URL Input Modal */}
+            {showUrlModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-zinc-800 p-8 rounded-lg shadow-xl transform transition-all duration-300 ease-in-out w-96">
+                        <h2 className="text-xl font-semibold mb-4 text-zinc-200">Enter URL</h2>
+                        <form onSubmit={handleUrlSubmit} className="space-y-4">
+                            <input
+                                type="url"
+                                value={urlInput}
+                                onChange={(e) => setUrlInput(e.target.value)}
+                                placeholder="https://example.com"
+                                className="w-full p-2 bg-zinc-700 text-zinc-200 rounded focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                                required
+                            />
+                            <div className="flex justify-end space-x-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUrlModal(false)}
+                                    className=" text-zinc-300 py-2 px-4 rounded-md hover:bg-zinc-600 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="bg-zinc-700 text-zinc-300 py-2 px-4 rounded-md hover:bg-zinc-600 transition-all"
+                                >
+                                    Add URL
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -32,13 +32,14 @@ class GroqService {
             // console.log(fullMessages);
             if (context) {
                 let lastMessage = fullMessages[fullMessages.length - 1];
-                lastMessage.content = `${lastMessage.content} \n\nPlease use the following context to anser the above question. (Do not mentoon using this context in your reply, just reply as you knew this) ${context}`;
+                lastMessage.content = `${lastMessage.content} \n\n<contenxt>Please use the following context to anser the above question. (Do not mention using this context in your reply, just reply as you knew this)\n\n ${context}</contenxt>`;
                 fullMessages[fullMessages.length - 1] = lastMessage;
             }
             const response = await this.groq.chat.completions.create({
                 messages: fullMessages,
                 model,
                 stream,
+                max_tokens: 4000,
             });
             return stream ? response : response.choices[0]?.message?.content || ""
         } else {

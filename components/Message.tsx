@@ -7,8 +7,8 @@ import remarkMath from "remark-math";
 import rehypePrism from "rehype-prism-plus";
 import rehypeKatex from "rehype-katex";
 import CodeBlock from "./CodeBlock";
+import BumpAnimationWrapper from "../components/BumpAnimationWrapper";
 // import LatexRenderer from "./LatexRenderer";
-
 
 interface MessageProps {
     message: { role: "user" | "assistant"; content: string };
@@ -57,7 +57,7 @@ const Message: React.FC<MessageProps> = ({ message, index, handleEditMessage }) 
 
     return (
         <div
-            className="bg-zinc-800 rounded-lg px-4 py-0 pb-3 w-full message-content relative"
+            className="bg-zinc-800 rounded-lg px-4 py-0 pb-3 w-full message-content relative overflow-hidden"
             onMouseEnter={() => setIsHover(true)}
             onMouseLeave={() => setIsHover(false)}
         >
@@ -85,22 +85,34 @@ const Message: React.FC<MessageProps> = ({ message, index, handleEditMessage }) 
                     </div>
                 </div>
             ) : (
-                <div className="prose prose-zinc max-w-none leading-relaxed">
+                <div className="prose prose-zinc max-w-none leading-relaxed overflow-hidden">
                     <ReactMarkdown
                         children={message.content}
                         remarkPlugins={[remarkGfm, remarkMath]}
                         rehypePlugins={[rehypePrism, rehypeKatex]}
                         components={{
                             code: renderCode,
-                            // math: ({ value }) => <LatexRenderer value={value} />,
-                            // inlineMath: ({ value }) => <LatexRenderer value={value} />,
+                            pre: ({ node, ...props }) => (
+                                <pre style={{ overflowX: "auto", maxWidth: "95%" }} {...props} />
+                            ),
+                            p: ({ node, ...props }) => (
+                                <p
+                                    style={{
+                                        overflowWrap: "break-word",
+                                        whiteSpace: "pre",
+                                        wordWrap: "break-word",
+                                        hyphens: "auto",
+                                    }}
+                                    {...props}
+                                />
+                            ),
                         }}
                     />
                 </div>
             )}
             <div
-                className={` transition-opacity duration-200 py-2 ${
-                    (isHover && !isEditing) ? "opacity-100" : "opacity-0"
+                className={`transition-opacity duration-200 py-2 ${
+                    isHover && !isEditing ? "opacity-100" : "opacity-0"
                 }`}
             >
                 {message.role === "user" ? (

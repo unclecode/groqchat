@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import GroqService from "../services/GroqService";
 import Crawl4AIService from "../services/Crawl4AIService";
+import CrawlService from "../services/CrawlService";
 import StorageService from "../services/StorageService";
 import MessageBox from "../components/MessageBox";
 import InputForm from "../components/InputForm";
@@ -19,7 +20,10 @@ const extractUrls = (text: string): string[] => {
 
 const removeUrls = (text: string): string => {
     const urlRegex = /@(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, "").trim();
+    // return text.replace(urlRegex, "").trim();
+    // return text.replace(urlRegex, "").trim();
+    // Remove @ and wrap url inside square brackets
+    return text.replace(urlRegex, (url) => `[${url.slice(1)}]`);
 };
 
 interface ChatWindowProps {
@@ -104,17 +108,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
             const urls = extractUrls(userInput);
             const inputWithoutUrls = removeUrls(userInput);
 
-            await sessionManager.updateSession(sessionId, { role: "user", content: inputWithoutUrls });
-            setMessages((prevMessages) => [
-                ...prevMessages,
-                { role: "user", content: inputWithoutUrls, createdAt: new Date() },
-            ]);
-            setUserInput("");
-
             const urlsToFetch = urls.filter((url) => !attachments.find((attachment) => attachment.source === url));
             if (urlsToFetch.length > 0) {
-                const crawl4AIService = new Crawl4AIService();
-                const results = await crawl4AIService.fetch(urlsToFetch);
+                // const crawl4AIService = new Crawl4AIService();
+                // const results = await crawl4AIService.fetch(urlsToFetch);
+                const results = await CrawlService.fetch(urlsToFetch);
 
                 const newAttachments = [];
                 for (const [index, result] of results.entries()) {
@@ -132,6 +130,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
                 setAttachments((prevAttachments) => [...prevAttachments, ...newAttachments]);
                 setShowAttachments(true);
             }
+
+
+            await sessionManager.updateSession(sessionId, { role: "user", content: inputWithoutUrls });
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { role: "user", content: inputWithoutUrls, createdAt: new Date() },
+            ]);
+            setUserInput("");
         }
     };
 
@@ -209,7 +215,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
     return (
         <div className="flex text-zinc-300 h-screen overflow-hidden">
             <div className={`flex flex-col flex-1 transition-transform duration-300 ease-in-out transform `}
-                style = {{ paddingRight: showAttachments ? "16rem" : "0" }}
+                style={{ width: showAttachments ? "calc(100% - 16rem)" : "100%" }}
+                // style = {{ paddingRight: showAttachments ? "16rem" : "0" }}
                 // style={{ left: showAttachments ? "-calc(100% + 10rem)" : "-10rem" }}
             >
                 { !params.sessionid ? (
@@ -232,7 +239,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ sessionId, setHasAnswered }) =>
                     )}
                 </button>
                 <div
-                    className={`absolute right-0 w-64 bg-zinc-800 p-4 transition-transform duration-300 ease-in-out transform border-l border-zinc-700 h-full ${
+                    className={`attachments-list absolute right-0 w-64 bg-zinc-800 p-4 transition-transform duration-300 ease-in-out transform border-l border-zinc-700 h-full ${
                         showAttachments ? "translate-x-0" : "translate-x-full"
                     } shadow-lg`}
                 >
