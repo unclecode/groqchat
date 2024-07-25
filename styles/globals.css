@@ -70,6 +70,8 @@ body {
     /* font-family: "Open Sans", sans-serif;
     font-weight: 100; */
     font-family: "Inter", sans-serif;
+    font-family: "Arimo", sans-serif;
+    font-smooth: always;
     font-optical-sizing: auto;
     font-weight: 300;
     font-style: normal;

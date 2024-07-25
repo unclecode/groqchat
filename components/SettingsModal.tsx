@@ -154,6 +154,9 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose, sessionMana
                                             className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full border border-zinc-700"
                                         >
                                             <option value="">Select a model</option>
+                                            <option value="llama3.1-8b-instant">Llama3-8B-8192</option>
+                                            <option value="llama3.1-70b-versatile">Llama3-70B-8192</option>
+                                            <option value="llama3.1-405b-reasoning">Llama3-70B-8192</option>
                                             <option value="llama3-8b-8192">Llama3-8B-8192</option>
                                             <option value="llama3-70b-8192">Llama3-70B-8192</option>
                                         </select>

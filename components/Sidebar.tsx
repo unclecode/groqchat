@@ -47,6 +47,13 @@ const Sidebar = () => {
         const fetchSessions = async () => {
             if (sessionManager && isStorageReady) {
                 const fetchedSessions = await sessionManager.getAllSessions();
+                // filter those has not getTime method
+                fetchedSessions.forEach((session) => {
+                    if (!session.createdAt) {
+                        session.createdAt = new Date();
+                    }
+                });
+                
                 setSessions(fetchedSessions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
             }
         };
