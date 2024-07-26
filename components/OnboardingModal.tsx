@@ -36,16 +36,13 @@ const OnboardingModal = ({ isOpen, onClose }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="flex flex-col bg-zinc-800 rounded-lg shadow-lg w-[40%] h-[40%] overflow-hidden">
                 <div className="flex items-center justify-between p-4 border-b border-zinc-700">
-                    <h2 className="text-2xl font-semibold text-zinc-300">Welcome to GroqChat App</h2>
+                    <h2 className="text-2xl font-semibold text-zinc-300">{"\u{1F680}"} Welcome to GroqChat v0.1.0</h2>
                     <XMarkIcon className="h-6 w-6 text-zinc-300 cursor-pointer" onClick={onClose} />
                 </div>
 
                 <div className="flex-grow overflow-y-auto p-6">
                     {step === 1 && (
                         <div className="h-full flex flex-col text-zinc-300">
-                            <h3 className="text-xl font-semibold mb-4">
-                                {"\u{1F680}"} Welcome to Your Local AI Assistant!
-                            </h3>
                             <div className="space-y-4">
                                 <p>
                                     {"\u{1F9E0}"} This application is inspired by Groq, the fastest inference engine,
