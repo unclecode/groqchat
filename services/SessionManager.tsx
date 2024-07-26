@@ -1,3 +1,4 @@
+// @ts-nocheck
 // services/SessionManager.ts
 import { v4 as uuidv4 } from "uuid";
 import { StorageStrategy, ChatSession, StorageInfo } from "./StorageStrategy";

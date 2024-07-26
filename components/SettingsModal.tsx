@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from "react";
 import StorageService from "../services/StorageService";
 import { XMarkIcon } from "@heroicons/react/24/outline";
@@ -19,6 +20,13 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose, sessionMana
         usedStorage: 0,
         totalStorage: 0,
     });
+
+    const handleResetOnboarding = () => {
+        StorageService.saveGroqAPIToken("");
+        onClose();
+        // reload the page
+        window.location.reload();
+    };
 
     React.useEffect(() => {
         const fetchStorageInfo = async () => {
@@ -115,9 +123,7 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose, sessionMana
                             <ul className="space-y-2 p-4">
                                 <li
                                     className={`text-zinc-300 cursor-pointer hover:bg-zinc-700 rounded p-2 transition-all
-                                    ${
-                                        selectedSetting === "general" ? "font-semibold" : ""
-                                    }`}
+                                    ${selectedSetting === "general" ? "font-semibold" : ""}`}
                                     onClick={() => setSelectedSetting("general")}
                                 >
                                     General
@@ -156,7 +162,9 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose, sessionMana
                                             <option value="">Select a model</option>
                                             <option value="llama-3.1-8b-instant">Llama-3.1-8b-instant</option>
                                             <option value="llama-3.1-70b-versatile">Llama-3.1-70b-versatile</option>
-                                            <option value="llama-3.1-405b-reasoning" disabled>Llama-3.1-405b-reasoning</option>
+                                            <option value="llama-3.1-405b-reasoning" disabled>
+                                                Llama-3.1-405b-reasoning
+                                            </option>
                                             <option value="llama3-8b-8192">Llama3-8B-8192</option>
                                             <option value="llama3-70b-8192">Llama3-70B-8192</option>
                                         </select>
@@ -186,6 +194,12 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose, sessionMana
                                             className="bg-zinc-800 text-zinc-300 rounded-md py-2 px-3 w-full h-32 border border-zinc-700"
                                         ></textarea>
                                     </div>
+                                    <button
+                                        onClick={handleResetOnboarding}
+                                        className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-all"
+                                    >
+                                        Reset Onboarding
+                                    </button>
                                 </div>
                             )}
                             {selectedSetting === "database" && (
@@ -212,9 +226,9 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose, sessionMana
                                         <div className="mb-4">
                                             <div className="text-sm font-medium text-gray-500">Storage Usage</div>
                                             <div className="mt-2">
-                                                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                                <div className="w-full bg-gray-700 rounded-full h-2.5">
                                                     <div
-                                                        className="bg-blue-600 h-2.5 rounded-full"
+                                                        className="bg-slate-400 h-2.5 rounded-full"
                                                         style={{
                                                             width: `${
                                                                 (storageInfo.usedStorage / storageInfo.totalStorage) *

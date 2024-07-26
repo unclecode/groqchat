@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { CopyToClipboard } from "react-copy-to-clipboard";
-import { ClipboardCopyIcon } from "@heroicons/react/24/outline";
 
 interface CodeBlockProps {
     className?: string;
@@ -11,17 +10,17 @@ const renderToString = (children: React.ReactNode): string => {
     if (typeof children === "string") {
         return children;
     }
-    if (children === null || children === undefined) {
+    if (children == null) {
         return "";
     }
-    return React.Children.map(children, (child) => {
+    const childrenArray = React.Children.toArray(children);
+    return childrenArray.map((child) => {
         if (typeof child === "string") {
             return child;
-        } else if (React.isValidElement(child) && child.props) {
-            // Recursively handle children of this child
+        } else if (React.isValidElement(child)) {
             return renderToString(child.props.children);
         }
-        return ""; // Or handle other types as needed
+        return "";
     }).join("");
 };
 

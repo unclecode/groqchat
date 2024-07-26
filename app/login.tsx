@@ -10,7 +10,7 @@ const Login = () => {
             <div className='flex flex-col space-y-4 w-80'>
                 <input placeholder='Email Address' className='border border-gray-400 rounded text-black p-3' />
                 <Link href="/home" className='bg-teal-600 hover:bg-teal-700 rounded-sm font-light text-white p-4 px-4 text-center'>Continue</Link>
-                <span className='text-sm text-center'>Don't have an account ? <Link href="/login" className='text-teal-600'>Sign up</Link></span>
+                <span className='text-sm text-center'>Don&apos;t  have an account ? <Link href="/login" className='text-teal-600'>Sign up</Link></span>
             </div>
 
             <div className='w-80 relative '>

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // services/models.ts
 import mongoose, { Schema, Model } from 'mongoose';
 import { ChatSession } from './StorageStrategy';

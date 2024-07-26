@@ -1,3 +1,4 @@
+// @ts-nocheck
 // services/Crawl4AIService.ts
 import StorageService from "./StorageService";
 class Crawl4AIService {

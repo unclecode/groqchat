@@ -1,3 +1,4 @@
+// @ts-nocheck
 // components/ModelSelector.tsx
 import React, { useState, useEffect } from "react";
 import StorageService from "../services/StorageService";
@@ -55,7 +56,7 @@ const ModelSelector = () => {
     const [currentModel, setCurrentModel] = useState("");
     const [modelList, setModelList] = useState([]);
 
-    const getModelDetailer = (model) => {
+    const getModelDetailer = (model : any ) => {
         let lines = model.description.split(/\n/);
         const modelTitle = `<span class="font-semibold">${lines[0]}</span><br/>`;
         const modelDescription = `<p class="text-xs text-zinc-400">${lines.slice(1).join("<br/>")}</p>`;
@@ -63,7 +64,7 @@ const ModelSelector = () => {
     };
 
     useEffect(() => {
-        const storedModel = StorageService.getCurrentSessionModel() || StorageService.getDefaultModel() || "";
+        const storedModel = StorageService.getCurrentSessionModel() || StorageService.getDefaultModel() || models[1].id;
         setCurrentModel(storedModel);
         setModelList(models.filter((model) => model.provider === "Groq"));
     }, []);

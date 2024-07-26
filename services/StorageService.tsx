@@ -85,6 +85,10 @@ class StorageService {
     static clear(): void {
         localStorage.clear();
     }
+
+    static isOnboardingCompleted(): boolean {
+        return !!localStorage.getItem(StorageService.GROQ_API_TOKEN_KEY);
+    }
 }
 
 export default StorageService;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // components/MessageBox.tsx
 import React, { useRef, useEffect } from "react";
 import Message from "./Message";

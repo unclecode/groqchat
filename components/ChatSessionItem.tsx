@@ -4,9 +4,12 @@ import Link from "next/link";
 import { EllipsisHorizontalIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import SessionManager from "../services/SessionManager";
 import { useRouter } from "next/navigation";
+import { ChatSession } from "../services/StorageStrategy";
 
 interface ChatSessionItemProps {
     session: ChatSession;
+    sessionManager: SessionManager;
+    onRenameSession: (sessionId: string, newCaption: string) => void;
 }
 
 const ChatSessionItem: React.FC<ChatSessionItemProps> = ({ session, sessionManager, onRenameSession }) => {
@@ -22,6 +25,9 @@ const ChatSessionItem: React.FC<ChatSessionItemProps> = ({ session, sessionManag
     const handleRename = async () => {
         setShowContextMenu(false);
         let new_caption = prompt("Enter new caption", session.caption);
+        if (!new_caption) {
+            return;
+        }
         await sessionManager.renameSession(session._id, new_caption);
         onRenameSession(session._id, new_caption);
     };

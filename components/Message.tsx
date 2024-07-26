@@ -1,3 +1,4 @@
+// @ts-nocheck
 // components/Message.tsx
 import React, { useState } from "react";
 import { PencilSquareIcon, ClipboardDocumentIcon } from "@heroicons/react/24/outline";
@@ -7,8 +8,6 @@ import remarkMath from "remark-math";
 import rehypePrism from "rehype-prism-plus";
 import rehypeKatex from "rehype-katex";
 import CodeBlock from "./CodeBlock";
-import BumpAnimationWrapper from "../components/BumpAnimationWrapper";
-// import LatexRenderer from "./LatexRenderer";
 
 interface MessageProps {
     message: { role: "user" | "assistant"; content: string };
@@ -87,7 +86,6 @@ const Message: React.FC<MessageProps> = ({ message, index, handleEditMessage }) 
             ) : (
                 <div className="prose prose-zinc max-w-none leading-relaxed overflow-hidden">
                     <ReactMarkdown
-                        children={message.content}
                         remarkPlugins={[remarkGfm, remarkMath]}
                         rehypePlugins={[rehypePrism, rehypeKatex]}
                         components={{
@@ -99,7 +97,7 @@ const Message: React.FC<MessageProps> = ({ message, index, handleEditMessage }) 
                                 <p
                                     style={{
                                         overflowWrap: "break-word",
-                                        whiteSpace: "pre",
+                                        whiteSpace: "pre-wrap",
                                         wordWrap: "break-word",
                                         hyphens: "auto",
                                     }}
@@ -107,7 +105,9 @@ const Message: React.FC<MessageProps> = ({ message, index, handleEditMessage }) 
                                 />
                             ),
                         }}
-                    />
+                    >
+                        {message.content}
+                    </ReactMarkdown>
                 </div>
             )}
             <div

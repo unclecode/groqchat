@@ -10,7 +10,7 @@ const Home = () => {
   const sessionId = "";
 
   return (
-    <MainLayout sessionId={sessionId as string} hasAnswered={hasAnswered} setHasAnswered={setHasAnswered} />
+    <MainLayout sessionId={sessionId} hasAnswered={hasAnswered} setHasAnswered={setHasAnswered} />
   );
 };
 

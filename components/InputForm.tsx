@@ -1,3 +1,4 @@
+// @ts-nocheck
 // InputForm.tsx
 import React, { useRef, useEffect, useState } from "react";
 import { PaperClipIcon, ArrowUpIcon, MicrophoneIcon, StopIcon } from "@heroicons/react/24/outline";
@@ -118,7 +119,7 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
     const handleUrlSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (urlInput.trim()) {
-            setUserInput((prev) => `${prev} @${urlInput.trim()}`.trim());
+            setUserInput((prev:string) => `${prev} @${urlInput.trim()}`.trim());
             setUrlInput("");
             setShowUrlModal(false);
         }

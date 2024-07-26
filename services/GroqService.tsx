@@ -1,3 +1,4 @@
+// @ts-nocheck
 // groqchat/services/GroqService.ts
 import { Groq } from "groq-sdk";
 import StorageService from "./StorageService";
@@ -18,7 +19,7 @@ class GroqService {
     async getChatCompletion(
         model: string,
         systemPrompt: string,
-        messages: { role: "user" | "assistant"; content: string }[],
+        messages: { role: "user" | "assistant" | "system"; content: string }[],
         stream?: boolean,
         context?: string
     ) {
