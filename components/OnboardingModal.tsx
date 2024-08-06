@@ -36,7 +36,7 @@ const OnboardingModal = ({ isOpen, onClose }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="flex flex-col bg-zinc-800 rounded-lg shadow-lg w-[40%] h-[40%] overflow-hidden">
                 <div className="flex items-center justify-between p-4 border-b border-zinc-700">
-                    <h2 className="text-2xl font-semibold text-zinc-300">{"\u{1F680}"} Welcome to GroqChat v0.1.0</h2>
+                    <h2 className="text-2xl font-medium text-zinc-300">{"\u{1F680}"} Welcome to GroqChat v0.1.0</h2>
                     <XMarkIcon className="h-6 w-6 text-zinc-300 cursor-pointer" onClick={onClose} />
                 </div>
 
@@ -81,7 +81,7 @@ const OnboardingModal = ({ isOpen, onClose }) => {
                         </div>
                     )}
 
-                    {step === 2 && (
+                    {/* {step === 2 && (
                         <div className="h-full flex flex-col">
                             <p className="text-zinc-300 mb-4">Lets watch a quick introduction video:</p>
                             <div className="flex-grow">
@@ -94,9 +94,9 @@ const OnboardingModal = ({ isOpen, onClose }) => {
                                 ></iframe>
                             </div>
                         </div>
-                    )}
+                    )} */}
 
-                    {step === 3 && (
+                    {step === 2 && (
                         <div className="h-full flex flex-col">
                             <p className="text-zinc-300 mb-4">Please enter your Groq API Token:</p>
                             <input
@@ -132,7 +132,7 @@ const OnboardingModal = ({ isOpen, onClose }) => {
                         </div>
                     )}
 
-                    {step === 4 && (
+                    {step === 3 && (
                         <div className="h-full flex flex-col">
                             <p className="text-zinc-300 mb-4">
                                 Great! You are all set up. Here are some additional steps:

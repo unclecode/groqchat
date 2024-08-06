@@ -148,7 +148,7 @@ const InputForm: React.FC<InputFormProps> = ({ userInput, setUserInput, handleUs
                     onKeyDown={handleKeyDown}
                     rows={1}
                 />
-                {openAIWhisperAPIToken && (
+                {groqAPIToken && (
                     <button
                         type="button"
                         onClick={handleMicrophoneClick}
