@@ -81,5 +81,3 @@ This is an open-source project. Contributions, issues, and feature requests are 
 ---
 
 Built with ❤️ by Unclecode (Follow me on [X](https://x.com/unclecode)).
-
-```
